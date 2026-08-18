@@ -40,6 +40,20 @@ npm run dev
 
 The development server is available at `http://localhost:5173` and proxies `/api` requests to the backend. Run `npm test`, `npm run lint`, and `npm run build` to verify frontend changes.
 
+## Replay analysis
+
+`S2ProtocolAdapter` decodes replay metadata, tracker events, and game events into normalized models. The analysis layer reconstructs sampled player state and exposes timeline, build-order, and flat feature-row extractors. The adapter uses Python's modern module loader for protocol definitions because current `s2protocol` releases still rely on the `imp` module removed in Python 3.12.
+
+```python
+from backend.app.analysis import extract_build_order, extract_feature_rows, extract_timeline
+from backend.app.replay.decoder import S2ProtocolAdapter
+
+replay = S2ProtocolAdapter().decode("example.SC2Replay")
+timeline = extract_timeline(replay, sample_seconds=5)
+build_order = extract_build_order(replay)
+feature_rows = extract_feature_rows(replay, timeline)
+```
+
 ## Layout
 
 - `backend/app/api/` — FastAPI routes

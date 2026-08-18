@@ -55,8 +55,8 @@ backend/
 - [x] Undertand the project
 - [x] Decide Tech Stack
 - [x] Decide Architecture
-- [ ] Scaffold backend + frontend
-- [ ] Implement parser + feature extractor
+- [X] Scaffold backend + frontend
+- [X] Implement parser + feature extractor
 - [ ] Implement SQLite persistence + Parquet export
 - [ ] Implement FastAPI endpoints
 - [ ] Implement React frontend (upload, list, minimap, charts)
