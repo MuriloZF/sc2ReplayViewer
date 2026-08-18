@@ -1,0 +1,50 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "sc2-replay-viewer-backend"
+version = "0.1.0"
+description = "API and replay analysis pipeline for StarCraft II replays"
+requires-python = ">=3.12"
+dependencies = [
+  "fastapi>=0.115,<1.0",
+  "pydantic-settings>=2.6,<3.0",
+  "python-multipart>=0.0.12,<1.0",
+  "s2protocol>=5.0,<6.0",
+  "sqlalchemy>=2.0,<3.0",
+  "uvicorn[standard]>=0.32,<1.0",
+]
+
+[project.optional-dependencies]
+export = [
+  "pandas>=2.2,<3.0",
+  "pyarrow>=18,<20",
+]
+dev = [
+  "httpx>=0.27,<1.0",
+  "mypy>=1.13,<2.0",
+  "pytest>=8.3,<9.0",
+  "pytest-cov>=6.0,<7.0",
+  "ruff>=0.8,<1.0",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["backend"]
+
+[tool.pytest.ini_options]
+addopts = "--strict-markers --strict-config"
+pythonpath = ["."]
+testpaths = ["backend/tests"]
+
+[tool.ruff]
+target-version = "py312"
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM"]
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+packages = ["backend.app"]
