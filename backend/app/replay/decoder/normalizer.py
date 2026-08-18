@@ -2,7 +2,13 @@ from collections.abc import Iterable, Mapping
 from typing import Any
 
 from backend.app.replay.decoder.models import RawEvent
-from backend.app.replay.events import PlayerEconomyEvent, UnitEvent, UnitEventKind, UnitPosition
+from backend.app.replay.events import (
+    PlayerEconomyEvent,
+    UnitEvent,
+    UnitEventKind,
+    UnitPosition,
+    UpgradeEvent,
+)
 
 _UNIT_EVENT_KINDS = {
     "NNet.Replay.Tracker.SUnitBornEvent": UnitEventKind.BORN,
@@ -16,9 +22,10 @@ _UNIT_EVENT_KINDS = {
 
 def normalize_tracker_events(
     events: Iterable[RawEvent],
-) -> tuple[tuple[UnitEvent, ...], tuple[PlayerEconomyEvent, ...]]:
+) -> tuple[tuple[UnitEvent, ...], tuple[PlayerEconomyEvent, ...], tuple[UpgradeEvent, ...]]:
     units: list[UnitEvent] = []
     economy: list[PlayerEconomyEvent] = []
+    upgrades: list[UpgradeEvent] = []
 
     for event in events:
         event_type = str(event.get("_event", ""))
@@ -28,8 +35,16 @@ def normalize_tracker_events(
                 units.append(unit_event)
         elif event_type == "NNet.Replay.Tracker.SPlayerStatsEvent":
             economy.append(_normalize_economy_event(event))
+        elif event_type == "NNet.Replay.Tracker.SUpgradeEvent":
+            upgrades.append(
+                UpgradeEvent(
+                    game_loop=int(event.get("_gameloop", 0)),
+                    player_id=int(event.get("m_playerId", 0)),
+                    upgrade_type=_text(event.get("m_upgradeTypeName", "Unknown upgrade")),
+                )
+            )
 
-    return tuple(units), tuple(economy)
+    return tuple(units), tuple(economy), tuple(upgrades)
 
 
 def _normalize_unit_event(event: RawEvent, kind: UnitEventKind) -> UnitEvent:

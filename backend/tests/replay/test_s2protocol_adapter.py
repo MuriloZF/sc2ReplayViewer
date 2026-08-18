@@ -50,7 +50,13 @@ class ReplayProtocol:
                 "m_unitTagRecycle": 0,
                 "m_unitTypeName": b"SCV",
                 "m_controlPlayerId": 1,
-            }
+            },
+            {
+                "_event": "NNet.Replay.Tracker.SUpgradeEvent",
+                "_gameloop": 100,
+                "m_playerId": 1,
+                "m_upgradeTypeName": b"Stimpack",
+            },
         ]
 
     @staticmethod
@@ -73,3 +79,4 @@ def test_decodes_replay_sections(tmp_path: Path) -> None:
     assert replay.metadata.map_name == "Test Map"
     assert replay.metadata.players[0].name == "<TEAM> Alpha"
     assert replay.unit_events[0].unit_type == "SCV"
+    assert replay.upgrade_events[0].upgrade_type == "Stimpack"

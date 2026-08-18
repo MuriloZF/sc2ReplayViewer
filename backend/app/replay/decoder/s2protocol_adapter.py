@@ -74,14 +74,14 @@ class S2ProtocolAdapter:
         except Exception as exc:
             raise ReplayDecodeError(f"Unable to decode replay {path.name}: {exc}") from exc
 
-        unit_events, economy_events = normalize_tracker_events(tracker_events)
+        unit_events, economy_events, upgrade_events = normalize_tracker_events(tracker_events)
         metadata = ReplayMetadata(
             base_build=base_build,
             elapsed_game_loops=int(header.get("m_elapsedGameLoops", 0)),
             map_name=_text(details.get("m_title", "Unknown map")),
             players=_players(details),
         )
-        return DecodedReplay(metadata, unit_events, economy_events, game_events)
+        return DecodedReplay(metadata, unit_events, economy_events, game_events, upgrade_events)
 
 
 def _load_s2protocol() -> tuple[ArchiveFactory, Callable[[], ModuleType], ProtocolResolver]:

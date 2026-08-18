@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from typing import Any
 
-from backend.app.replay.events import PlayerEconomyEvent, PlayerInfo, UnitEvent
+from backend.app.replay.events import PlayerEconomyEvent, PlayerInfo, UnitEvent, UpgradeEvent
 
 RawEvent = dict[str, Any]
 
@@ -20,3 +20,4 @@ class DecodedReplay:
     unit_events: tuple[UnitEvent, ...]
     economy_events: tuple[PlayerEconomyEvent, ...]
     game_events: tuple[RawEvent, ...]
+    upgrade_events: tuple[UpgradeEvent, ...] = ()

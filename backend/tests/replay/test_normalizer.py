@@ -33,9 +33,15 @@ def test_normalizes_unit_and_economy_events() -> None:
             "m_unitTypeName": b"BeaconArmy",
             "m_controlPlayerId": 1,
         },
+        {
+            "_event": "NNet.Replay.Tracker.SUpgradeEvent",
+            "_gameloop": 200,
+            "m_playerId": 1,
+            "m_upgradeTypeName": b"TerranInfantryWeaponsLevel1",
+        },
     ]
 
-    units, economy = normalize_tracker_events(tracker_events)
+    units, economy, upgrades = normalize_tracker_events(tracker_events)
 
     assert units[0].kind is UnitEventKind.BORN
     assert units[0].unit_tag == (4 << 18) | 2
@@ -47,3 +53,5 @@ def test_normalizes_unit_and_economy_events() -> None:
     assert economy[0].army_supply == 3
     assert economy[0].workers == 12
     assert len(units) == 1
+    assert upgrades[0].upgrade_type == "TerranInfantryWeaponsLevel1"
+    assert upgrades[0].player_id == 1
