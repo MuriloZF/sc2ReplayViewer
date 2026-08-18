@@ -61,9 +61,9 @@ backend/
 - [X] Validate parser against a real replay
 - [X] Implement FastAPI endpoints
 - [X] Implement React frontend (upload, list, minimap, charts)
-- [ ] Add tests + API docs
-- [ ] Fix build orders
-- [ ] Implement build order with replay data
+- [X] Add tests + API docs
+- [X] Fix build orders
+- [X] Implement build order with replay data
 - [ ] Implement game stats with replay data
 - [ ] Implement Minimap with replay data
 - [ ] Adjust UI

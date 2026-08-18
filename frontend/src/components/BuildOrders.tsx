@@ -18,23 +18,31 @@ export function BuildOrders({ entries, players, currentTime }: BuildOrdersProps)
       </div>
       <div className="build-columns">
         {players.slice(0, 2).map((player, playerIndex) => {
-          const visibleEntries = entries
-            .filter(
-              (entry) => entry.player_id === player.player_id && entry.game_time_seconds <= currentTime,
-            )
-            .slice(-14);
+          const playerEntries = entries.filter((entry) => entry.player_id === player.player_id);
           return (
             <div className={`build-column player-${playerIndex + 1}`} key={player.player_id}>
-              <h4>{player.name}</h4>
-              {visibleEntries.length === 0 ? (
-                <p className="empty-state compact">No production events yet.</p>
+              <div className="build-column-heading">
+                <h4>{player.name}</h4>
+                <span>{playerEntries.length} events</span>
+              </div>
+              {playerEntries.length === 0 ? (
+                <p className="empty-state compact">No build-order events were found.</p>
               ) : (
                 <ol>
-                  {visibleEntries.map((entry, index) => (
-                    <li key={`${entry.game_loop}-${entry.item_name}-${index}`}>
+                  {playerEntries.map((entry, index) => (
+                    <li
+                      className={entry.game_time_seconds > currentTime ? "is-future" : ""}
+                      key={`${entry.game_loop}-${entry.item_name}-${index}`}
+                    >
                       <time>{formatDuration(entry.game_time_seconds)}</time>
                       <i />
-                      <span>{entry.item_name}</span>
+                      <span className="build-item">
+                        <strong>{entry.item_name}</strong>
+                        <small>{entry.category}</small>
+                      </span>
+                      <span className="supply-badge">
+                        {entry.supply === null ? "—" : Math.round(entry.supply)}
+                      </span>
                     </li>
                   ))}
                 </ol>

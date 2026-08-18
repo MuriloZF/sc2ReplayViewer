@@ -80,7 +80,9 @@ class BuildOrderEntryResponse(ApiModel):
     player_id: int
     game_loop: int
     game_time_seconds: float
+    supply: float | None
     item_name: str
+    category: Literal["worker", "structure", "unit", "upgrade"]
     action: str
 
 

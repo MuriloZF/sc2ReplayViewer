@@ -577,10 +577,23 @@ h3 {
 }
 
 .build-column h4 {
-  margin: 0 0 9px;
+  margin: 0;
   font-size: 0.7rem;
   letter-spacing: 0.08em;
   text-transform: uppercase;
+}
+
+.build-column-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 9px;
+}
+
+.build-column-heading span {
+  color: var(--muted);
+  font-family: "JetBrains Mono", monospace;
+  font-size: 0.62rem;
 }
 
 .build-column ol {
@@ -589,16 +602,23 @@ h3 {
   margin: 0;
   padding: 0;
   list-style: none;
+  max-height: 440px;
+  overflow-y: auto;
+  padding-right: 6px;
 }
 
 .build-column li {
   display: grid;
-  grid-template-columns: 44px 7px minmax(0, 1fr);
+  grid-template-columns: 44px 7px minmax(0, 1fr) 30px;
   gap: 9px;
   align-items: center;
-  min-height: 23px;
+  min-height: 34px;
   color: #d9e1ea;
   font-size: 0.72rem;
+}
+
+.build-column li.is-future {
+  opacity: 0.44;
 }
 
 .build-column time {
@@ -618,10 +638,36 @@ h3 {
   background: var(--red);
 }
 
-.build-column li span {
+.build-item {
+  display: grid;
+  gap: 1px;
   overflow: hidden;
+}
+
+.build-item strong {
+  overflow: hidden;
+  font-weight: 500;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.build-item small {
+  color: var(--muted);
+  font-size: 0.56rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.supply-badge {
+  display: grid;
+  width: 28px;
+  height: 22px;
+  place-items: center;
+  border: 1px solid #2a3b50;
+  border-radius: 5px;
+  color: #fde68a;
+  font-family: "JetBrains Mono", monospace;
+  font-size: 0.62rem;
 }
 
 .metric-cards {

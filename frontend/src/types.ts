@@ -66,7 +66,9 @@ export interface BuildOrderEntry {
   player_id: number;
   game_loop: number;
   game_time_seconds: number;
+  supply: number | null;
   item_name: string;
+  category: "worker" | "structure" | "unit" | "upgrade";
   action: string;
 }
 

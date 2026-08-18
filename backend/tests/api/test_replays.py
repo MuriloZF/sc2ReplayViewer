@@ -7,7 +7,7 @@ import pytest
 from httpx import ASGITransport, AsyncClient
 
 from backend.app.analysis import ReplayAnalysis
-from backend.app.analysis.build_order import BuildOrderEntry
+from backend.app.analysis.build_order import BuildOrderCategory, BuildOrderEntry
 from backend.app.api.dependencies import get_replay_analyzer
 from backend.app.api.routes import replays as replay_routes
 from backend.app.main import create_app
@@ -43,7 +43,17 @@ def _analysis() -> ReplayAnalysis:
     return ReplayAnalysis(
         replay=replay,
         timeline=(FrameSnapshot(224, 10.0, (player,)),),
-        build_order=(BuildOrderEntry(1, 112, 5.0, "Barracks", "started"),),
+        build_order=(
+            BuildOrderEntry(
+                1,
+                112,
+                5.0,
+                15,
+                "Barracks",
+                BuildOrderCategory.STRUCTURE,
+                "started",
+            ),
+        ),
         feature_rows=({"player_id": 1},),
     )
 
@@ -86,6 +96,8 @@ def test_upload_and_read_replay_analysis(monkeypatch: pytest.MonkeyPatch) -> Non
         assert fetched_summary.json() == summary
         assert timeline.json()["samples"][0]["players"][0]["army_supply"] == 5
         assert build_order.json()["entries"][0]["item_name"] == "Barracks"
+        assert build_order.json()["entries"][0]["category"] == "structure"
+        assert build_order.json()["entries"][0]["supply"] == 15
         assert analyzer.sample_seconds == 10
         assert analyzer.temporary_path is not None
         assert not analyzer.temporary_path.exists()
