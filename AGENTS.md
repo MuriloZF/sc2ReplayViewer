@@ -50,7 +50,7 @@ backend/
 - Clean code
 - Use comments to explain your code, but avoid unnecessary comments
 - Documentate the APIs
-
+- Don't do any big commit, break then in small parts, so it will easier to me to maintain
 # Current Task:
 - [x] Undertand the project
 - [x] Decide Tech Stack
