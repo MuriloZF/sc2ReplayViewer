@@ -54,6 +54,14 @@ build_order = extract_build_order(replay)
 feature_rows = extract_feature_rows(replay, timeline)
 ```
 
+Inspect a replay from the command line after installing the project:
+
+```bash
+sc2-replay-inspect path/to/game.SC2Replay
+```
+
+Add `--include-data` to emit the full timeline, build order, and feature rows. Use `--output report.json` to write the result to a file instead of standard output. The command exits with a concise error for missing, corrupt, or unsupported replay files.
+
 ## Layout
 
 - `backend/app/api/` — FastAPI routes

@@ -23,7 +23,9 @@ def normalize_tracker_events(
     for event in events:
         event_type = str(event.get("_event", ""))
         if event_type in _UNIT_EVENT_KINDS:
-            units.append(_normalize_unit_event(event, _UNIT_EVENT_KINDS[event_type]))
+            unit_event = _normalize_unit_event(event, _UNIT_EVENT_KINDS[event_type])
+            if not unit_event.unit_type.startswith("Beacon"):
+                units.append(unit_event)
         elif event_type == "NNet.Replay.Tracker.SPlayerStatsEvent":
             economy.append(_normalize_economy_event(event))
 
@@ -49,21 +51,30 @@ def _normalize_economy_event(event: RawEvent) -> PlayerEconomyEvent:
     stats = event.get("m_stats", {})
     if not isinstance(stats, Mapping):
         stats = {}
+    supply_used = _stat(stats, "m_scoreValueFoodUsed") / 4096
+    workers = _stat(stats, "m_scoreValueWorkersActiveCount")
     return PlayerEconomyEvent(
         game_loop=int(event.get("_gameloop", 0)),
         player_id=int(event.get("m_playerId", 0)),
         minerals=_stat(stats, "m_scoreValueMineralsCurrent"),
         vespene=_stat(stats, "m_scoreValueVespeneCurrent"),
-        supply_used=_stat(stats, "m_scoreValueFoodUsed") / 4096,
+        supply_used=supply_used,
         supply_cap=_stat(stats, "m_scoreValueFoodMade") / 4096,
-        army_supply=_stat(stats, "m_scoreValueFoodUsedArmy") / 4096,
-        workers=_stat(stats, "m_scoreValueWorkersActiveCount"),
+        army_supply=_army_supply(stats, supply_used, workers),
+        workers=workers,
     )
 
 
 def _stat(stats: Mapping[str, Any], key: str) -> int:
     value = stats.get(key, 0)
     return int(value) if isinstance(value, int | float) else 0
+
+
+def _army_supply(stats: Mapping[str, Any], supply_used: float, workers: int) -> float:
+    explicit_army_supply = stats.get("m_scoreValueFoodUsedArmy")
+    if isinstance(explicit_army_supply, int | float):
+        return explicit_army_supply / 4096
+    return max(supply_used - workers, 0.0)
 
 
 def _unit_tag(event: RawEvent) -> int:

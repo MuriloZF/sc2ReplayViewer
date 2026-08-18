@@ -47,5 +47,5 @@ def test_extracts_sampled_timeline_and_features() -> None:
 def test_extracts_chronological_build_order() -> None:
     entries = extract_build_order(_replay())
 
-    assert [entry.item_name for entry in entries] == ["SCV", "Barracks"]
-    assert entries[1].action == "started"
+    assert [entry.item_name for entry in entries] == ["Barracks"]
+    assert entries[0].action == "started"

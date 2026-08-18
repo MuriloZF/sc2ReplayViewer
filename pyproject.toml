@@ -29,6 +29,9 @@ dev = [
   "ruff>=0.8,<1.0",
 ]
 
+[project.scripts]
+sc2-replay-inspect = "backend.app.cli:main"
+
 [tool.hatch.build.targets.wheel]
 packages = ["backend"]
 

@@ -28,6 +28,7 @@ def extract_build_order(replay: DecodedReplay) -> tuple[BuildOrderEntry, ...]:
         for event in replay.unit_events
         if event.player_id is not None
         and event.unit_type
+        and event.game_loop > 0
         and event.kind in {UnitEventKind.STARTED, UnitEventKind.BORN}
     ]
     return tuple(sorted(entries, key=lambda entry: (entry.game_loop, entry.player_id)))

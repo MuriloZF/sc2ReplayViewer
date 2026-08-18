@@ -2,6 +2,7 @@ import importlib.util
 import sys
 from collections.abc import Callable, Iterable, Mapping
 from functools import lru_cache
+from html import unescape
 from pathlib import Path
 from types import ModuleType
 from typing import Any, Protocol, cast
@@ -164,5 +165,5 @@ def _result(value: object) -> PlayerResult:
 
 def _text(value: object) -> str:
     if isinstance(value, bytes):
-        return value.decode("utf-8", errors="replace")
-    return str(value)
+        value = value.decode("utf-8", errors="replace")
+    return unescape(str(value).replace("<sp/>", " "))

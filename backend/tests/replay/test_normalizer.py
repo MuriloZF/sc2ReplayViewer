@@ -23,9 +23,15 @@ def test_normalizes_unit_and_economy_events() -> None:
                 "m_scoreValueVespeneCurrent": 25,
                 "m_scoreValueFoodUsed": 61_440,
                 "m_scoreValueFoodMade": 92_160,
-                "m_scoreValueFoodUsedArmy": 20_480,
                 "m_scoreValueWorkersActiveCount": 12,
             },
+        },
+        {
+            "_event": "NNet.Replay.Tracker.SUnitBornEvent",
+            "_gameloop": 0,
+            "m_unitTagIndex": 5,
+            "m_unitTypeName": b"BeaconArmy",
+            "m_controlPlayerId": 1,
         },
     ]
 
@@ -38,5 +44,6 @@ def test_normalizes_unit_and_economy_events() -> None:
     assert units[0].position.x == 32
     assert economy[0].supply_used == 15
     assert economy[0].supply_cap == 22.5
-    assert economy[0].army_supply == 5
+    assert economy[0].army_supply == 3
     assert economy[0].workers == 12
+    assert len(units) == 1

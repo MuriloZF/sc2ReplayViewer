@@ -25,6 +25,8 @@ class GameState:
             return
 
         previous = self.units.get(event.unit_tag)
+        if previous is None and not event.unit_type:
+            return
         self.units[event.unit_tag] = UnitState(
             unit_tag=event.unit_tag,
             unit_type=event.unit_type or (previous.unit_type if previous else "Unknown"),
