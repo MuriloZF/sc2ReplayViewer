@@ -56,6 +56,8 @@ npm run dev
 
 The development server is available at `http://localhost:5173` and proxies `/api` requests to the backend. Run `npm test`, `npm run lint`, and `npm run build` to verify frontend changes.
 
+The frontend supports replay upload, process-local replay history, animated timeline playback, reconstructed unit positions on a canvas minimap, player resource cards, army/worker charts, and time-aware build-order columns. Start the backend before Vite so `/api` requests can be proxied correctly.
+
 ## Replay analysis
 
 `S2ProtocolAdapter` decodes replay metadata, tracker events, and game events into normalized models. The analysis layer reconstructs sampled player state and exposes timeline, build-order, and flat feature-row extractors. The adapter uses Python's modern module loader for protocol definitions because current `s2protocol` releases still rely on the `imp` module removed in Python 3.12.

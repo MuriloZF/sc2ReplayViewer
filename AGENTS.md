@@ -60,7 +60,7 @@ backend/
 - [X] Implement parser + feature extractor
 - [X] Validate parser against a real replay
 - [X] Implement FastAPI endpoints
-- [ ] Implement React frontend (upload, list, minimap, charts)
+- [X] Implement React frontend (upload, list, minimap, charts)
 - [ ] Add tests + API docs
 - [ ] Fix build orders
 - [ ] Adjust UI
