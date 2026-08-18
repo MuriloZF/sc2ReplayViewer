@@ -20,6 +20,22 @@ uvicorn backend.app.main:app --reload
 
 The API is available at `http://localhost:8000`, with interactive documentation at `/docs` and the health check at `/api/v1/health`.
 
+Replay analyses are currently retained in process memory and are cleared whenever the API restarts. Upload a replay with:
+
+```bash
+curl -F replay=@path/to/game.SC2Replay http://localhost:8000/api/v1/replays
+```
+
+The replay API exposes:
+
+- `POST /api/v1/replays` — upload and analyze a replay
+- `GET /api/v1/replays` — list analyses in the current process
+- `GET /api/v1/replays/{replay_id}/summary` — metadata, players, and event counts
+- `GET /api/v1/replays/{replay_id}/timeline` — sampled economy and unit state
+- `GET /api/v1/replays/{replay_id}/build-order` — chronological production events
+
+The upload endpoint accepts a `sample_seconds` query parameter greater than 0 and at most 60, and limits replay files to 100 MB. Endpoint schemas and error responses are documented in the interactive OpenAPI UI.
+
 Run backend checks from the repository root:
 
 ```bash

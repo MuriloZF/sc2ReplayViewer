@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 
 from backend.app.api.router import api_router
+from backend.app.api.store import InMemoryReplayStore
 from backend.app.config import get_settings
 
 
@@ -13,6 +14,7 @@ def create_app() -> FastAPI:
         version="0.1.0",
         summary="Analyze StarCraft II replay files and expose timeline data.",
     )
+    application.state.replay_store = InMemoryReplayStore()
     application.include_router(api_router, prefix=settings.api_prefix)
     return application
 

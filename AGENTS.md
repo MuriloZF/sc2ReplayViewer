@@ -59,9 +59,9 @@ backend/
 - [X] Scaffold backend + frontend
 - [X] Implement parser + feature extractor
 - [X] Validate parser against a real replay
-- [ ] Implement SQLite persistence + Parquet export
-- [ ] Implement FastAPI endpoints
+- [X] Implement FastAPI endpoints
 - [ ] Implement React frontend (upload, list, minimap, charts)
 - [ ] Add tests + API docs
 - [ ] Fix build orders
 - [ ] Adjust UI
+- [ ] Implement SQLite persistence + Parquet export
