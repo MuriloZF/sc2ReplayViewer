@@ -19,10 +19,12 @@ from backend.app.api.schemas import (
     BuildOrderEntryResponse,
     BuildOrderResponse,
     FrameSnapshotResponse,
+    MapBoundsResponse,
     MapReferenceResponse,
     PlayerResponse,
     ReplayCountsResponse,
     ReplayListResponse,
+    ReplayMapMetadataResponse,
     ReplaySummaryResponse,
     TimelineResponse,
 )
@@ -157,6 +159,32 @@ async def replay_minimap(
         contents,
         media_type="image/png",
         headers={"Cache-Control": "public, max-age=31536000, immutable"},
+    )
+
+
+@router.get(
+    "/{replay_id}/map-metadata",
+    response_model=ReplayMapMetadataResponse,
+    summary="Get replay map dimensions and playable bounds",
+    responses={404: {"model": ApiErrorResponse}, 502: {"model": ApiErrorResponse}},
+)
+async def replay_map_metadata(
+    replay_id: str, store: StoreDependency, resolver: MapResolverDependency
+) -> ReplayMapMetadataResponse:
+    record = _record_or_404(store, replay_id)
+    reference = record.analysis.replay.metadata.map_reference
+    if reference is None:
+        raise HTTPException(
+            status.HTTP_404_NOT_FOUND, "Replay does not contain a downloadable map reference"
+        )
+    try:
+        bounds = await run_in_threadpool(resolver.resolve_bounds, reference)
+    except MapAssetError as exc:
+        raise HTTPException(
+            status.HTTP_502_BAD_GATEWAY, f"Unable to resolve replay map: {exc}"
+        ) from exc
+    return ReplayMapMetadataResponse(
+        replay_id=replay_id, bounds=MapBoundsResponse.model_validate(bounds)
     )
 
 

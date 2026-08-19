@@ -98,5 +98,19 @@ class BuildOrderResponse(ApiModel):
     entries: list[BuildOrderEntryResponse]
 
 
+class MapBoundsResponse(ApiModel):
+    width: int
+    height: int
+    playable_left: int
+    playable_bottom: int
+    playable_right: int
+    playable_top: int
+
+
+class ReplayMapMetadataResponse(ApiModel):
+    replay_id: str
+    bounds: MapBoundsResponse
+
+
 class ApiErrorResponse(BaseModel):
     detail: str = Field(description="Human-readable explanation of the request failure.")

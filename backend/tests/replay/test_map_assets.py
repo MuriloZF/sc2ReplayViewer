@@ -1,10 +1,24 @@
 import hashlib
+import struct
 from pathlib import Path
 
 import pytest
 
 from backend.app.replay.decoder import MapReference
-from backend.app.replay.map_assets import MapAssetError, MapAssetResolver, depot_url
+from backend.app.replay.map_assets import MapAssetError, MapAssetResolver, MapBounds, depot_url
+
+
+def _map_info() -> bytes:
+    return b"".join(
+        (
+            struct.pack("<IIQII", 0x4D617049, 39, 0, 168, 168),
+            struct.pack("<II", 1, 1),
+            b"\x00\x00",
+            struct.pack("<II", 1, 0),
+            b"Dark\x00Aiur\x00",
+            struct.pack("<iiii", 12, 17, 156, 147),
+        )
+    )
 
 
 def test_resolves_and_reuses_cached_minimap(tmp_path: Path) -> None:
@@ -24,6 +38,7 @@ def test_resolves_and_reuses_cached_minimap(tmp_path: Path) -> None:
         tmp_path,
         downloader=download,
         minimap_extractor=lambda contents: b"minimap tga" if contents == archive else b"",
+        map_info_extractor=lambda contents: _map_info() if contents == archive else b"",
         png_converter=convert,
     )
 
@@ -32,6 +47,7 @@ def test_resolves_and_reuses_cached_minimap(tmp_path: Path) -> None:
 
     assert first == second == tmp_path / f"{reference.content_hash}.png"
     assert first.read_bytes() == b"png image"
+    assert resolver.resolve_bounds(reference) == MapBounds(168, 168, 12, 17, 156, 147)
     assert downloads == [depot_url(reference)]
 
 
