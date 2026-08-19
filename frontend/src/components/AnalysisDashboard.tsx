@@ -12,6 +12,7 @@ import type {
 import { formatDuration, formatNumber } from "../utils";
 import { BuildOrders } from "./BuildOrders";
 import { Minimap } from "./Minimap";
+import { RaceIcon } from "./RaceIcon";
 import { ResourceChart } from "./ResourceChart";
 
 interface AnalysisDashboardProps {
@@ -144,22 +145,30 @@ export function AnalysisDashboard({ replay }: AnalysisDashboardProps) {
 }
 
 function MatchHeader({ replay, currentTime }: { replay: ReplaySummary; currentTime: number }) {
+  const [playerOne, playerTwo] = replay.players;
   return (
     <header className="match-header panel">
-      {replay.players.slice(0, 2).map((player, index) => (
-        <div className={`match-player player-${index + 1}`} key={player.player_id}>
-          <span className="race-mark">{player.race.charAt(0).toUpperCase()}</span>
-          <span>
-            <strong>{player.name}</strong>
-            <small>{player.race}</small>
-          </span>
-        </div>
-      ))}
+      {playerOne && <MatchPlayer player={playerOne} index={0} />}
       <div className="match-center">
         <span className="time-badge">GAME TIME · {formatDuration(currentTime)}</span>
         <small>{replay.map_name}</small>
       </div>
+      {playerTwo && <MatchPlayer player={playerTwo} index={1} />}
     </header>
+  );
+}
+
+function MatchPlayer({ player, index }: { player: Player; index: number }) {
+  return (
+    <div className={`match-player player-${index + 1}`}>
+      <span className="race-mark">
+        <RaceIcon race={player.race} />
+      </span>
+      <span>
+        <strong>{player.name}</strong>
+        <small>{player.race}</small>
+      </span>
+    </div>
   );
 }
 
