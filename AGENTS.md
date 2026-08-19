@@ -66,7 +66,7 @@ backend/
 - [X] Implement build order with replay data
 - [X] Implement game stats with replay data
 - [X] Parse and expose the replay's map reference
-- [ ] Create a map-asset resolver and PNG cache
+- [X] Create a map-asset resolver and PNG cache
 - [ ] Add the minimap-image endpoint
 - [ ] Render the image in React
 - [ ] Extract true playable bound and align unit coordinates accurately

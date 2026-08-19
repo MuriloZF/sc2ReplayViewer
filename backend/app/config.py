@@ -1,4 +1,5 @@
 from functools import lru_cache
+from pathlib import Path
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -9,6 +10,7 @@ class Settings(BaseSettings):
     app_name: str = "SC2 Replay Viewer API"
     api_prefix: str = "/api/v1"
     environment: str = "development"
+    map_cache_dir: Path = Path(".cache/maps")
 
     model_config = SettingsConfigDict(env_prefix="SC2_", env_file=".env", extra="ignore")
 

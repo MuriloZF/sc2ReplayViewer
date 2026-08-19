@@ -26,6 +26,9 @@ Replay analyses are currently retained in process memory and are cleared wheneve
 curl -F replay=@path/to/game.SC2Replay http://localhost:8000/api/v1/replays
 ```
 
+Map minimaps are resolved from Blizzard's content-addressed depot and cached as PNG files in
+`.cache/maps`. Set `SC2_MAP_CACHE_DIR` to use a different cache directory.
+
 The replay API exposes:
 
 - `POST /api/v1/replays` — upload and analyze a replay
