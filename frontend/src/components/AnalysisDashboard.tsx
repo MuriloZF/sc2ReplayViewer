@@ -112,8 +112,8 @@ export function AnalysisDashboard({ replay }: AnalysisDashboardProps) {
         <section className="panel minimap-panel">
           <div className="panel-heading">
             <div>
-              <p className="eyebrow">Live battlefield</p>
-              <h3>{replay.map_name}</h3>
+              <p className="eyebrow">{replay.map_name}</p>
+              <h3>Minimap</h3>
             </div>
             <span className="count-badge">
               {playerSnapshots.reduce((total, player) => total + player.units.length, 0)} units
@@ -170,7 +170,7 @@ function WinProbability({ players }: { players: Player[] }) {
     <section className="panel probability-panel">
       <div className="panel-heading">
         <div>
-          <p className="eyebrow">Outcome model</p>
+          <p className="eyebrow">Coming later</p>
           <h3>Win probability</h3>
         </div>
       </div>
@@ -188,8 +188,8 @@ function WinProbability({ players }: { players: Player[] }) {
         </div>
       ) : (
         <div className="probability-pending">
-          <strong>Model offline</strong>
-          <span>Replay analysis remains available.</span>
+          <strong>Not available yet</strong>
+          <span>Win prediction will be added later.</span>
         </div>
       )}
     </section>
@@ -236,7 +236,7 @@ function DashboardSkeleton({ replay }: { replay: ReplaySummary }) {
       <span className="loading-orbit" />
       <div>
         <strong>Loading {replay.map_name}</strong>
-        <p>Fetching timeline and build order…</p>
+        <p>Loading replay data…</p>
       </div>
     </div>
   );

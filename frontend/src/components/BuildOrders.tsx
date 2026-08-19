@@ -12,8 +12,8 @@ export function BuildOrders({ entries, players, currentTime }: BuildOrdersProps)
     <section className="panel build-panel">
       <div className="panel-heading">
         <div>
-          <p className="eyebrow">Production ledger</p>
-          <h3>Build sequence</h3>
+          <p className="eyebrow">Timeline</p>
+          <h3>Build order</h3>
         </div>
       </div>
       <div className="build-columns">
