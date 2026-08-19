@@ -146,7 +146,9 @@ def _players(details: Mapping[str, Any]) -> tuple[PlayerInfo, ...]:
             continue
         players.append(
             PlayerInfo(
-                player_id=int(raw_player.get("m_workingSetSlotId", index - 1)) + 1,
+                # Tracker events identify players by their 1-based position in
+                # m_playerList. The working-set slot is a separate lobby slot.
+                player_id=index,
                 name=_text(raw_player.get("m_name", f"Player {index}")),
                 race=_text(raw_player.get("m_race", "Unknown")),
                 result=_result(raw_player.get("m_result")),

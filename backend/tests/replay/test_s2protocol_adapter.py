@@ -32,11 +32,17 @@ class ReplayProtocol:
             "m_title": b"Test Map",
             "m_playerList": [
                 {
-                    "m_workingSetSlotId": 0,
+                    "m_workingSetSlotId": 10,
                     "m_name": b"&lt;TEAM&gt;<sp/>Alpha",
                     "m_race": b"Terran",
                     "m_result": 1,
-                }
+                },
+                {
+                    "m_workingSetSlotId": 11,
+                    "m_name": b"Bravo",
+                    "m_race": b"Zerg",
+                    "m_result": 2,
+                },
             ],
         }
 
@@ -78,5 +84,6 @@ def test_decodes_replay_sections(tmp_path: Path) -> None:
     assert replay.metadata.base_build == 99_999
     assert replay.metadata.map_name == "Test Map"
     assert replay.metadata.players[0].name == "<TEAM> Alpha"
+    assert [player.player_id for player in replay.metadata.players] == [1, 2]
     assert replay.unit_events[0].unit_type == "SCV"
     assert replay.upgrade_events[0].upgrade_type == "Stimpack"
