@@ -7,7 +7,7 @@ from pathlib import Path
 from types import ModuleType
 from typing import Any, Protocol, cast
 
-from backend.app.replay.decoder.models import DecodedReplay, RawEvent, ReplayMetadata
+from backend.app.replay.decoder.models import DecodedReplay, MapReference, RawEvent, ReplayMetadata
 from backend.app.replay.decoder.normalizer import normalize_tracker_events
 from backend.app.replay.events import PlayerInfo, PlayerResult
 
@@ -80,6 +80,7 @@ class S2ProtocolAdapter:
             elapsed_game_loops=int(header.get("m_elapsedGameLoops", 0)),
             map_name=_text(details.get("m_title", "Unknown map")),
             players=_players(details),
+            map_reference=_map_reference(details),
         )
         return DecodedReplay(metadata, unit_events, economy_events, game_events, upgrade_events)
 
@@ -155,6 +156,30 @@ def _players(details: Mapping[str, Any]) -> tuple[PlayerInfo, ...]:
             )
         )
     return tuple(players)
+
+
+def _map_reference(details: Mapping[str, Any]) -> MapReference | None:
+    handles = details.get("m_cacheHandles")
+    if not isinstance(handles, (list, tuple)) or not handles:
+        return None
+
+    # The dependency list ends with the map archive. A depot handle stores
+    # its four-byte type, two reserved bytes, two-byte region, and SHA-256.
+    handle = handles[-1]
+    if not isinstance(handle, bytes) or len(handle) != 40:
+        return None
+    try:
+        archive_type = handle[:4].decode("ascii").lower()
+        region = handle[6:8].decode("ascii").lower()
+    except UnicodeDecodeError:
+        return None
+    if archive_type != "s2ma" or not region.isalpha():
+        return None
+    return MapReference(
+        region=region,
+        archive_type=archive_type,
+        content_hash=handle[8:].hex(),
+    )
 
 
 def _result(value: object) -> PlayerResult:

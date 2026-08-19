@@ -20,6 +20,11 @@ export interface ReplaySummary {
   filename: string;
   created_at: string;
   map_name: string;
+  map_reference: {
+    region: string;
+    archive_type: string;
+    content_hash: string;
+  } | null;
   base_build: number;
   elapsed_game_loops: number;
   duration_seconds: number;

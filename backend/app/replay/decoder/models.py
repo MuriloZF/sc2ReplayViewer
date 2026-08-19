@@ -7,11 +7,19 @@ RawEvent = dict[str, Any]
 
 
 @dataclass(frozen=True, slots=True)
+class MapReference:
+    region: str
+    archive_type: str
+    content_hash: str
+
+
+@dataclass(frozen=True, slots=True)
 class ReplayMetadata:
     base_build: int
     elapsed_game_loops: int
     map_name: str
     players: tuple[PlayerInfo, ...]
+    map_reference: MapReference | None = None
 
 
 @dataclass(frozen=True, slots=True)

@@ -30,6 +30,7 @@ class ReplayProtocol:
     def decode_replay_details(_contents: bytes) -> dict[str, object]:
         return {
             "m_title": b"Test Map",
+            "m_cacheHandles": [b"s2ma\x00\x00US" + bytes.fromhex("ab" * 32)],
             "m_playerList": [
                 {
                     "m_workingSetSlotId": 10,
@@ -83,6 +84,10 @@ def test_decodes_replay_sections(tmp_path: Path) -> None:
 
     assert replay.metadata.base_build == 99_999
     assert replay.metadata.map_name == "Test Map"
+    assert replay.metadata.map_reference is not None
+    assert replay.metadata.map_reference.region == "us"
+    assert replay.metadata.map_reference.archive_type == "s2ma"
+    assert replay.metadata.map_reference.content_hash == "ab" * 32
     assert replay.metadata.players[0].name == "<TEAM> Alpha"
     assert [player.player_id for player in replay.metadata.players] == [1, 2]
     assert replay.unit_events[0].unit_type == "SCV"

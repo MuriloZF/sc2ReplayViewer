@@ -18,6 +18,7 @@ from backend.app.api.schemas import (
     BuildOrderEntryResponse,
     BuildOrderResponse,
     FrameSnapshotResponse,
+    MapReferenceResponse,
     PlayerResponse,
     ReplayCountsResponse,
     ReplayListResponse,
@@ -158,6 +159,11 @@ def _summary(record: ReplayRecord) -> ReplaySummaryResponse:
         filename=record.filename,
         created_at=record.created_at,
         map_name=metadata.map_name,
+        map_reference=(
+            MapReferenceResponse.model_validate(metadata.map_reference)
+            if metadata.map_reference is not None
+            else None
+        ),
         base_build=metadata.base_build,
         elapsed_game_loops=metadata.elapsed_game_loops,
         duration_seconds=metadata.elapsed_game_loops / LOOPS_PER_SECOND,

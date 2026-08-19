@@ -25,11 +25,18 @@ class ReplayCountsResponse(ApiModel):
     feature_rows: int
 
 
+class MapReferenceResponse(ApiModel):
+    region: str
+    archive_type: str
+    content_hash: str
+
+
 class ReplaySummaryResponse(ApiModel):
     replay_id: str
     filename: str
     created_at: datetime
     map_name: str
+    map_reference: MapReferenceResponse | None
     base_build: int
     elapsed_game_loops: int
     duration_seconds: float

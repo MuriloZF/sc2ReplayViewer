@@ -51,6 +51,9 @@ def analysis_report(analysis: ReplayAnalysis, *, include_data: bool = False) -> 
     metadata = analysis.replay.metadata
     report: dict[str, Any] = {
         "map_name": metadata.map_name,
+        "map_reference": (
+            asdict(metadata.map_reference) if metadata.map_reference is not None else None
+        ),
         "base_build": metadata.base_build,
         "elapsed_game_loops": metadata.elapsed_game_loops,
         "players": [asdict(player) for player in metadata.players],

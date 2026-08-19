@@ -11,7 +11,7 @@ from backend.app.analysis.build_order import BuildOrderCategory, BuildOrderEntry
 from backend.app.api.dependencies import get_replay_analyzer
 from backend.app.api.routes import replays as replay_routes
 from backend.app.main import create_app
-from backend.app.replay.decoder.models import DecodedReplay, ReplayMetadata
+from backend.app.replay.decoder.models import DecodedReplay, MapReference, ReplayMetadata
 from backend.app.replay.events import PlayerInfo, PlayerResult
 from backend.app.replay.state import FrameSnapshot, PlayerSnapshot
 
@@ -34,6 +34,7 @@ def _analysis() -> ReplayAnalysis:
             elapsed_game_loops=224,
             map_name="Test Map",
             players=(PlayerInfo(1, "Alpha", "Terran", PlayerResult.WIN),),
+            map_reference=MapReference("us", "s2ma", "ab" * 32),
         ),
         unit_events=(),
         economy_events=(),
@@ -83,6 +84,11 @@ def test_upload_and_read_replay_analysis(monkeypatch: pytest.MonkeyPatch) -> Non
             summary = upload.json()
             replay_id = summary["replay_id"]
             assert summary["map_name"] == "Test Map"
+            assert summary["map_reference"] == {
+                "region": "us",
+                "archive_type": "s2ma",
+                "content_hash": "ab" * 32,
+            }
             assert summary["duration_seconds"] == 10
             assert summary["players"][0]["win_probability"] is None
             assert summary["counts"]["game_events"] == 1

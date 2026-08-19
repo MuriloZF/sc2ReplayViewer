@@ -64,7 +64,11 @@ backend/
 - [X] Add tests + API docs
 - [X] Fix build orders
 - [X] Implement build order with replay data
-- [ ] Implement game stats with replay data
-- [ ] Implement Minimap with replay data
+- [X] Implement game stats with replay data
+- [X] Parse and expose the replay's map reference
+- [ ] Create a map-asset resolver and PNG cache
+- [ ] Add the minimap-image endpoint
+- [ ] Render the image in React
+- [ ] Extract true playable bound and align unit coordinates accurately
 - [ ] Adjust UI
 - [ ] Implement SQLite persistence + Parquet export

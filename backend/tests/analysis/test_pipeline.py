@@ -31,6 +31,7 @@ def test_analyzes_replay_and_builds_summary_report() -> None:
     report = analysis_report(analysis)
 
     assert report["map_name"] == "Test Map"
+    assert report["map_reference"] is None
     assert report["players"] == [
         {"player_id": 1, "name": "Alpha", "race": "Terran", "result": "unknown"}
     ]
