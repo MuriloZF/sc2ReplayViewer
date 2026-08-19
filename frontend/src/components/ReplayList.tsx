@@ -12,13 +12,13 @@ export function ReplayList({ replays, selectedId, onSelect }: ReplayListProps) {
     <section className="replay-list" aria-labelledby="recent-replays-title">
       <div className="section-heading">
         <div>
-          <p className="eyebrow">Current session</p>
-          <h2 id="recent-replays-title">Analyzed replays</h2>
+          <p className="eyebrow">Session archive</p>
+          <h2 id="recent-replays-title">Match records</h2>
         </div>
         <span className="count-badge">{replays.length}</span>
       </div>
       {replays.length === 0 ? (
-        <p className="empty-state">Your analyzed replays will appear here until the API restarts.</p>
+        <p className="empty-state">Decode a replay to begin this session’s match archive.</p>
       ) : (
         <div className="replay-items">
           {replays.map((replay) => (

@@ -70,5 +70,5 @@ backend/
 - [X] Add the minimap-image endpoint
 - [X] Render the image in React
 - [X] Extract true playable bound and align unit coordinates accurately
-- [ ] Adjust UI
+- [X] Adjust UI
 - [ ] Implement SQLite persistence + Parquet export

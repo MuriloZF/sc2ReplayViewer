@@ -112,8 +112,8 @@ export function AnalysisDashboard({ replay }: AnalysisDashboardProps) {
         <section className="panel minimap-panel">
           <div className="panel-heading">
             <div>
-              <p className="eyebrow">Reconstructed state</p>
-              <h3>Unit positions</h3>
+              <p className="eyebrow">Live battlefield</p>
+              <h3>{replay.map_name}</h3>
             </div>
             <span className="count-badge">
               {playerSnapshots.reduce((total, player) => total + player.units.length, 0)} units
@@ -170,7 +170,7 @@ function WinProbability({ players }: { players: Player[] }) {
     <section className="panel probability-panel">
       <div className="panel-heading">
         <div>
-          <p className="eyebrow">Future ML hook</p>
+          <p className="eyebrow">Outcome model</p>
           <h3>Win probability</h3>
         </div>
       </div>
@@ -188,8 +188,8 @@ function WinProbability({ players }: { players: Player[] }) {
         </div>
       ) : (
         <div className="probability-pending">
-          <strong>Not calculated</strong>
-          <span>The schema is ready for a future model.</span>
+          <strong>Model offline</strong>
+          <span>Replay analysis remains available.</span>
         </div>
       )}
     </section>

@@ -18,9 +18,9 @@ describe("App", () => {
     render(<App />);
 
     expect(
-      screen.getByRole("heading", { name: "Study your replays with real time win prediction." }),
+      screen.getByRole("heading", { name: "Turn a replay into a match you can interrogate." }),
     ).toBeInTheDocument();
     expect(screen.getByLabelText(/choose a .sc2replay file/i)).toBeInTheDocument();
-    expect(await screen.findByText("Your analyzed replays will appear here until the API restarts.")).toBeInTheDocument();
+    expect(await screen.findByText("Decode a replay to begin this session’s match archive.")).toBeInTheDocument();
   });
 });

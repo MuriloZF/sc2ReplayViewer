@@ -24,10 +24,10 @@ export function UploadPanel({ busy, onUpload }: UploadPanelProps) {
   return (
     <form className="upload-panel" onSubmit={submit}>
       <div>
-        <p className="eyebrow">SC2 Analyze</p>
-        <h1>Study your replays with real time win prediction.</h1>
+        <p className="eyebrow">After-action review</p>
+        <h1>Turn a replay into a match you can interrogate.</h1>
         <p className="lede">
-          Upload a StarCraft II replay.
+          Scrub the battlefield, inspect each build decision, and find where the game changed.
         </p>
       </div>
       <label className="file-drop">
@@ -42,7 +42,7 @@ export function UploadPanel({ busy, onUpload }: UploadPanelProps) {
           ↑
         </span>
         <strong>{file ? file.name : "Choose a .SC2Replay file"}</strong>
-        <small>{file ? "Ready to analyze" : "Up to 100 MB"}</small>
+        <small>{file ? "Replay locked · ready to decode" : "SC2Replay · up to 100 MB"}</small>
       </label>
       <button className="primary-button" type="submit" disabled={!file || busy}>
         {busy ? "Analyzing replay…" : "Analyze replay"}

@@ -55,7 +55,7 @@ function App() {
         <button className="brand" type="button" onClick={() => setView("upload")}>
           <span className="brand-mark">Ⅱ</span>
           <span>
-            SC2 <em>REPLAY LAB</em>
+            SC2 <em>REPLAY ROOM</em>
           </span>
         </button>
         <div className="nav-links" aria-label="Primary navigation">
@@ -64,7 +64,7 @@ function App() {
             type="button"
             onClick={() => setView("upload")}
           >
-            Upload
+            Replays
           </button>
           <button
             className={view === "dashboard" ? "is-active" : ""}
