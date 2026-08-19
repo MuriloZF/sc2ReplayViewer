@@ -3,12 +3,13 @@ import tempfile
 from pathlib import Path
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, File, HTTPException, Query, UploadFile, status
+from fastapi import APIRouter, Depends, File, HTTPException, Query, Response, UploadFile, status
 from starlette.concurrency import run_in_threadpool
 
 from backend.app.analysis import ReplayAnalysis
 from backend.app.api.dependencies import (
     ReplayAnalyzer,
+    get_map_asset_resolver,
     get_replay_analyzer,
     get_replay_store,
     run_analysis,
@@ -26,7 +27,8 @@ from backend.app.api.schemas import (
     TimelineResponse,
 )
 from backend.app.api.store import InMemoryReplayStore, ReplayRecord
-from backend.app.replay.decoder import ReplayDecodeError
+from backend.app.replay.decoder import MapReference, ReplayDecodeError
+from backend.app.replay.map_assets import MapAssetError, MapAssetResolver
 from backend.app.replay.state.reconstructor import LOOPS_PER_SECOND
 
 router = APIRouter(prefix="/replays")
@@ -35,6 +37,7 @@ UPLOAD_CHUNK_BYTES = 1024 * 1024
 
 StoreDependency = Annotated[InMemoryReplayStore, Depends(get_replay_store)]
 AnalyzerDependency = Annotated[ReplayAnalyzer, Depends(get_replay_analyzer)]
+MapResolverDependency = Annotated[MapAssetResolver, Depends(get_map_asset_resolver)]
 
 
 @router.post(
@@ -120,6 +123,46 @@ async def replay_build_order(replay_id: str, store: StoreDependency) -> BuildOrd
             BuildOrderEntryResponse.model_validate(entry) for entry in record.analysis.build_order
         ],
     )
+
+
+@router.get(
+    "/{replay_id}/minimap",
+    response_class=Response,
+    summary="Get the replay map minimap",
+    description=(
+        "Resolves the exact map archive referenced by the replay and returns its minimap as PNG. "
+        "The converted image is cached by the map's content hash."
+    ),
+    responses={
+        404: {"model": ApiErrorResponse},
+        502: {"model": ApiErrorResponse},
+    },
+)
+async def replay_minimap(
+    replay_id: str, store: StoreDependency, resolver: MapResolverDependency
+) -> Response:
+    record = _record_or_404(store, replay_id)
+    reference = record.analysis.replay.metadata.map_reference
+    if reference is None:
+        raise HTTPException(
+            status.HTTP_404_NOT_FOUND, "Replay does not contain a downloadable map reference"
+        )
+    try:
+        contents = await run_in_threadpool(_resolve_minimap_contents, resolver, reference)
+    except MapAssetError as exc:
+        raise HTTPException(
+            status.HTTP_502_BAD_GATEWAY, f"Unable to resolve replay map: {exc}"
+        ) from exc
+    return Response(
+        contents,
+        media_type="image/png",
+        headers={"Cache-Control": "public, max-age=31536000, immutable"},
+    )
+
+
+def _resolve_minimap_contents(resolver: MapAssetResolver, reference: MapReference) -> bytes:
+    path = resolver.resolve(reference)
+    return path.read_bytes()
 
 
 async def _write_temporary_replay(upload: UploadFile) -> Path:

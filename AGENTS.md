@@ -67,7 +67,7 @@ backend/
 - [X] Implement game stats with replay data
 - [X] Parse and expose the replay's map reference
 - [X] Create a map-asset resolver and PNG cache
-- [ ] Add the minimap-image endpoint
+- [X] Add the minimap-image endpoint
 - [ ] Render the image in React
 - [ ] Extract true playable bound and align unit coordinates accurately
 - [ ] Adjust UI

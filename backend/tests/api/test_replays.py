@@ -8,12 +8,15 @@ from httpx import ASGITransport, AsyncClient
 
 from backend.app.analysis import ReplayAnalysis
 from backend.app.analysis.build_order import BuildOrderCategory, BuildOrderEntry
-from backend.app.api.dependencies import get_replay_analyzer
+from backend.app.api.dependencies import get_map_asset_resolver, get_replay_analyzer
 from backend.app.api.routes import replays as replay_routes
 from backend.app.main import create_app
 from backend.app.replay.decoder.models import DecodedReplay, MapReference, ReplayMetadata
 from backend.app.replay.events import PlayerInfo, PlayerResult
+from backend.app.replay.map_assets import MapAssetError
 from backend.app.replay.state import FrameSnapshot, PlayerSnapshot
+
+DEFAULT_MAP_REFERENCE = MapReference("us", "s2ma", "ab" * 32)
 
 
 class StubAnalyzer:
@@ -27,14 +30,26 @@ class StubAnalyzer:
         return _analysis()
 
 
-def _analysis() -> ReplayAnalysis:
+class StubMapAssetResolver:
+    def __init__(self, path: Path) -> None:
+        self.path = path
+        self.references: list[MapReference] = []
+
+    def resolve(self, reference: MapReference) -> Path:
+        self.references.append(reference)
+        return self.path
+
+
+def _analysis(
+    map_reference: MapReference | None = DEFAULT_MAP_REFERENCE,
+) -> ReplayAnalysis:
     replay = DecodedReplay(
         metadata=ReplayMetadata(
             base_build=97_563,
             elapsed_game_loops=224,
             map_name="Test Map",
             players=(PlayerInfo(1, "Alpha", "Terran", PlayerResult.WIN),),
-            map_reference=MapReference("us", "s2ma", "ab" * 32),
+            map_reference=map_reference,
         ),
         unit_events=(),
         economy_events=(),
@@ -59,7 +74,9 @@ def _analysis() -> ReplayAnalysis:
     )
 
 
-def test_upload_and_read_replay_analysis(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_upload_and_read_replay_analysis(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
     async def run_direct(function: Callable[..., Any], *args: object) -> Any:
         return function(*args)
 
@@ -68,11 +85,18 @@ def test_upload_and_read_replay_analysis(monkeypatch: pytest.MonkeyPatch) -> Non
     async def scenario() -> None:
         application = create_app()
         analyzer = StubAnalyzer()
+        minimap_path = tmp_path / "minimap.png"
+        minimap_path.write_bytes(b"png image")
+        map_resolver = StubMapAssetResolver(minimap_path)
 
         async def get_stub_analyzer() -> StubAnalyzer:
             return analyzer
 
+        async def get_stub_map_resolver() -> StubMapAssetResolver:
+            return map_resolver
+
         application.dependency_overrides[get_replay_analyzer] = get_stub_analyzer
+        application.dependency_overrides[get_map_asset_resolver] = get_stub_map_resolver
         transport = ASGITransport(app=application)
 
         async with AsyncClient(transport=transport, base_url="http://test") as client:
@@ -97,6 +121,7 @@ def test_upload_and_read_replay_analysis(monkeypatch: pytest.MonkeyPatch) -> Non
             fetched_summary = await client.get(f"/api/v1/replays/{replay_id}/summary")
             timeline = await client.get(f"/api/v1/replays/{replay_id}/timeline")
             build_order = await client.get(f"/api/v1/replays/{replay_id}/build-order")
+            minimap = await client.get(f"/api/v1/replays/{replay_id}/minimap")
 
         assert listing.json()["items"][0]["replay_id"] == replay_id
         assert fetched_summary.json() == summary
@@ -104,9 +129,54 @@ def test_upload_and_read_replay_analysis(monkeypatch: pytest.MonkeyPatch) -> Non
         assert build_order.json()["entries"][0]["item_name"] == "Barracks"
         assert build_order.json()["entries"][0]["category"] == "structure"
         assert build_order.json()["entries"][0]["supply"] == 15
+        assert minimap.content == b"png image"
+        assert minimap.headers["content-type"] == "image/png"
+        assert "immutable" in minimap.headers["cache-control"]
+        assert map_resolver.references == [MapReference("us", "s2ma", "ab" * 32)]
         assert analyzer.sample_seconds == 10
         assert analyzer.temporary_path is not None
         assert not analyzer.temporary_path.exists()
+
+    asyncio.run(scenario())
+
+
+def test_minimap_reports_missing_reference_and_resolution_failure(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    async def run_direct(function: Callable[..., Any], *args: object) -> Any:
+        return function(*args)
+
+    monkeypatch.setattr(replay_routes, "run_in_threadpool", run_direct)
+
+    class FailingResolver:
+        def resolve(self, _reference: MapReference) -> Path:
+            raise MapAssetError("depot unavailable")
+
+    async def scenario() -> None:
+        application = create_app()
+        missing_reference = application.state.replay_store.add(
+            "missing.SC2Replay", _analysis(map_reference=None)
+        )
+        failing_reference = application.state.replay_store.add("failure.SC2Replay", _analysis())
+
+        async def get_failing_resolver() -> FailingResolver:
+            return FailingResolver()
+
+        application.dependency_overrides[get_map_asset_resolver] = get_failing_resolver
+        transport = ASGITransport(app=application)
+
+        async with AsyncClient(transport=transport, base_url="http://test") as client:
+            missing = await client.get(
+                f"/api/v1/replays/{missing_reference.replay_id}/minimap"
+            )
+            failed = await client.get(
+                f"/api/v1/replays/{failing_reference.replay_id}/minimap"
+            )
+
+        assert missing.status_code == 404
+        assert missing.json()["detail"] == "Replay does not contain a downloadable map reference"
+        assert failed.status_code == 502
+        assert "depot unavailable" in failed.json()["detail"]
 
     asyncio.run(scenario())
 
