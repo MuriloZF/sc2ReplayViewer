@@ -617,10 +617,6 @@ h3 {
   font-size: 0.72rem;
 }
 
-.build-column li.is-future {
-  opacity: 0.44;
-}
-
 .build-column time {
   color: var(--muted);
   font-family: "JetBrains Mono", monospace;
