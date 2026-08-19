@@ -69,6 +69,6 @@ backend/
 - [X] Create a map-asset resolver and PNG cache
 - [X] Add the minimap-image endpoint
 - [X] Render the image in React
-- [ ] Extract true playable bound and align unit coordinates accurately
+- [X] Extract true playable bound and align unit coordinates accurately
 - [ ] Adjust UI
 - [ ] Implement SQLite persistence + Parquet export

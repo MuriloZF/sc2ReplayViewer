@@ -37,6 +37,7 @@ The replay API exposes:
 - `GET /api/v1/replays/{replay_id}/timeline` — sampled economy and unit state
 - `GET /api/v1/replays/{replay_id}/build-order` — chronological production events
 - `GET /api/v1/replays/{replay_id}/minimap` — exact replay map minimap as a cached PNG
+- `GET /api/v1/replays/{replay_id}/map-metadata` — map dimensions and playable bounds
 
 The upload endpoint accepts a `sample_seconds` query parameter greater than 0 and at most 60, and limits replay files to 100 MB. Endpoint schemas and error responses are documented in the interactive OpenAPI UI.
 

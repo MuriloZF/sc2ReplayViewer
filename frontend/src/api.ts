@@ -1,4 +1,9 @@
-import type { BuildOrderResponse, ReplaySummary, TimelineResponse } from "./types";
+import type {
+  BuildOrderResponse,
+  ReplayMapMetadata,
+  ReplaySummary,
+  TimelineResponse,
+} from "./types";
 
 const API_ROOT = "/api/v1";
 
@@ -50,4 +55,8 @@ export function getBuildOrder(replayId: string): Promise<BuildOrderResponse> {
 
 export function getMinimapUrl(replayId: string): string {
   return `${API_ROOT}/replays/${encodeURIComponent(replayId)}/minimap`;
+}
+
+export function getMapMetadata(replayId: string): Promise<ReplayMapMetadata> {
+  return request<ReplayMapMetadata>(`/replays/${replayId}/map-metadata`);
 }

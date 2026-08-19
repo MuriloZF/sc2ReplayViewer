@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
 
-import { getBuildOrder, getMinimapUrl, getTimeline } from "../api";
+import { getBuildOrder, getMapMetadata, getMinimapUrl, getTimeline } from "../api";
 import type {
   BuildOrderEntry,
   FrameSnapshot,
+  MapBounds,
   Player,
   PlayerSnapshot,
   ReplaySummary,
@@ -20,6 +21,7 @@ interface AnalysisDashboardProps {
 export function AnalysisDashboard({ replay }: AnalysisDashboardProps) {
   const [samples, setSamples] = useState<FrameSnapshot[]>([]);
   const [buildOrder, setBuildOrder] = useState<BuildOrderEntry[]>([]);
+  const [mapBounds, setMapBounds] = useState<MapBounds | null>(null);
   const [frameIndex, setFrameIndex] = useState(0);
   const [playing, setPlaying] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -27,11 +29,16 @@ export function AnalysisDashboard({ replay }: AnalysisDashboardProps) {
 
   useEffect(() => {
     let active = true;
-    Promise.all([getTimeline(replay.replay_id), getBuildOrder(replay.replay_id)])
-      .then(([timeline, order]) => {
+    Promise.all([
+      getTimeline(replay.replay_id),
+      getBuildOrder(replay.replay_id),
+      getMapMetadata(replay.replay_id).catch(() => null),
+    ])
+      .then(([timeline, order, mapMetadata]) => {
         if (!active) return;
         setSamples(timeline.samples);
         setBuildOrder(order.entries);
+        setMapBounds(mapMetadata?.bounds ?? null);
       })
       .catch((reason: unknown) => {
         if (active) setError(reason instanceof Error ? reason.message : "Unable to load analysis");
@@ -116,6 +123,7 @@ export function AnalysisDashboard({ replay }: AnalysisDashboardProps) {
             frame={frame}
             samples={samples}
             imageUrl={getMinimapUrl(replay.replay_id)}
+            mapBounds={mapBounds}
           />
         </section>
         <BuildOrders entries={buildOrder} players={replay.players} currentTime={frame.game_time_seconds} />

@@ -33,6 +33,8 @@ describe("Minimap", () => {
 
     class LoadedImage {
       decoding = "";
+      naturalWidth = 256;
+      naturalHeight = 256;
       onload: (() => void) | null = null;
       onerror: (() => void) | null = null;
 
@@ -43,9 +45,33 @@ describe("Minimap", () => {
 
     vi.stubGlobal("Image", LoadedImage);
 
-    render(<Minimap frame={frame} samples={[frame]} imageUrl="/minimap.png" />);
+    render(
+      <Minimap
+        frame={frame}
+        samples={[frame]}
+        imageUrl="/minimap.png"
+        mapBounds={{
+          width: 168,
+          height: 168,
+          playable_left: 12,
+          playable_bottom: 17,
+          playable_right: 156,
+          playable_top: 147,
+        }}
+      />,
+    );
 
     await waitFor(() => expect(drawImage).toHaveBeenCalledOnce());
-    expect(drawImage).toHaveBeenCalledWith(expect.any(LoadedImage), 0, 0, 600, 600);
+    expect(drawImage).toHaveBeenCalledWith(
+      expect.any(LoadedImage),
+      56,
+      65,
+      144,
+      130,
+      0,
+      0,
+      600,
+      600,
+    );
   });
 });

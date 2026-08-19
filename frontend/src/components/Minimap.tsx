@@ -1,11 +1,12 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 
-import type { FrameSnapshot } from "../types";
+import type { FrameSnapshot, MapBounds } from "../types";
 
 interface MinimapProps {
   frame: FrameSnapshot;
   samples: FrameSnapshot[];
   imageUrl: string;
+  mapBounds: MapBounds | null;
 }
 
 interface Bounds {
@@ -17,10 +18,22 @@ interface Bounds {
 
 const PLAYER_COLORS = ["#22d3ee", "#fb4d4d", "#f5c451", "#a78bfa"];
 
-export function Minimap({ frame, samples, imageUrl }: MinimapProps) {
+export function Minimap({ frame, samples, imageUrl, mapBounds }: MinimapProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [mapImage, setMapImage] = useState<HTMLImageElement | null>(null);
-  const bounds = useMemo(() => calculateBounds(samples), [samples]);
+  const observedBounds = useMemo(() => calculateBounds(samples), [samples]);
+  const bounds = useMemo(
+    () =>
+      mapBounds
+        ? {
+            minX: mapBounds.playable_left,
+            maxX: mapBounds.playable_right,
+            minY: mapBounds.playable_bottom,
+            maxY: mapBounds.playable_top,
+          }
+        : observedBounds,
+    [mapBounds, observedBounds],
+  );
 
   useEffect(() => {
     let active = true;
@@ -48,7 +61,7 @@ export function Minimap({ frame, samples, imageUrl }: MinimapProps) {
     const size = canvas.width;
     context.clearRect(0, 0, size, size);
     if (mapImage) {
-      context.drawImage(mapImage, 0, 0, size, size);
+      drawMapImage(context, mapImage, mapBounds, size);
     } else {
       drawFallbackMap(context, size);
     }
@@ -56,7 +69,7 @@ export function Minimap({ frame, samples, imageUrl }: MinimapProps) {
       context.fillStyle = PLAYER_COLORS[playerIndex % PLAYER_COLORS.length];
       player.units.forEach((unit) => {
         if (!unit.position) return;
-        const point = project(unit.position.x, unit.position.y, bounds, size);
+        const point = project(unit.position.x, unit.position.y, bounds, size, mapBounds !== null);
         context.globalAlpha = unit.completed ? 0.92 : 0.5;
         context.beginPath();
         context.arc(point.x, point.y, unit.completed ? 2.8 : 2, 0, Math.PI * 2);
@@ -64,7 +77,7 @@ export function Minimap({ frame, samples, imageUrl }: MinimapProps) {
       });
     });
     context.globalAlpha = 1;
-  }, [bounds, frame, mapImage]);
+  }, [bounds, frame, mapBounds, mapImage]);
 
   return (
     <div className="minimap-wrap">
@@ -95,14 +108,43 @@ function calculateBounds(samples: FrameSnapshot[]): Bounds {
   };
 }
 
-function project(x: number, y: number, bounds: Bounds, size: number) {
-  const padding = 20;
+function project(x: number, y: number, bounds: Bounds, size: number, exact: boolean) {
+  const padding = exact ? 0 : 20;
   const width = Math.max(bounds.maxX - bounds.minX, 1);
   const height = Math.max(bounds.maxY - bounds.minY, 1);
   return {
     x: padding + ((x - bounds.minX) / width) * (size - padding * 2),
     y: size - padding - ((y - bounds.minY) / height) * (size - padding * 2),
   };
+}
+
+function drawMapImage(
+  context: CanvasRenderingContext2D,
+  image: HTMLImageElement,
+  bounds: MapBounds | null,
+  size: number,
+) {
+  if (!bounds) {
+    context.drawImage(image, 0, 0, size, size);
+    return;
+  }
+  const mapOffsetX = (image.naturalWidth - bounds.width) / 2;
+  const mapOffsetY = (image.naturalHeight - bounds.height) / 2;
+  const sourceX = mapOffsetX + bounds.playable_left;
+  const sourceY = mapOffsetY + bounds.height - bounds.playable_top;
+  const sourceWidth = bounds.playable_right - bounds.playable_left;
+  const sourceHeight = bounds.playable_top - bounds.playable_bottom;
+  context.drawImage(
+    image,
+    sourceX,
+    sourceY,
+    sourceWidth,
+    sourceHeight,
+    0,
+    0,
+    size,
+    size,
+  );
 }
 
 function drawFallbackMap(context: CanvasRenderingContext2D, size: number) {

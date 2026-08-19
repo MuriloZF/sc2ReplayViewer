@@ -81,3 +81,17 @@ export interface BuildOrderResponse {
   replay_id: string;
   entries: BuildOrderEntry[];
 }
+
+export interface MapBounds {
+  width: number;
+  height: number;
+  playable_left: number;
+  playable_bottom: number;
+  playable_right: number;
+  playable_top: number;
+}
+
+export interface ReplayMapMetadata {
+  replay_id: string;
+  bounds: MapBounds;
+}
