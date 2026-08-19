@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 
-import { getBuildOrder, getTimeline } from "../api";
+import { getBuildOrder, getMinimapUrl, getTimeline } from "../api";
 import type {
   BuildOrderEntry,
   FrameSnapshot,
@@ -112,7 +112,11 @@ export function AnalysisDashboard({ replay }: AnalysisDashboardProps) {
               {playerSnapshots.reduce((total, player) => total + player.units.length, 0)} units
             </span>
           </div>
-          <Minimap frame={frame} samples={samples} />
+          <Minimap
+            frame={frame}
+            samples={samples}
+            imageUrl={getMinimapUrl(replay.replay_id)}
+          />
         </section>
         <BuildOrders entries={buildOrder} players={replay.players} currentTime={frame.game_time_seconds} />
       </div>

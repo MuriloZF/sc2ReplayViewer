@@ -47,3 +47,7 @@ export function getTimeline(replayId: string): Promise<TimelineResponse> {
 export function getBuildOrder(replayId: string): Promise<BuildOrderResponse> {
   return request<BuildOrderResponse>(`/replays/${replayId}/build-order`);
 }
+
+export function getMinimapUrl(replayId: string): string {
+  return `${API_ROOT}/replays/${encodeURIComponent(replayId)}/minimap`;
+}

@@ -68,7 +68,7 @@ backend/
 - [X] Parse and expose the replay's map reference
 - [X] Create a map-asset resolver and PNG cache
 - [X] Add the minimap-image endpoint
-- [ ] Render the image in React
+- [X] Render the image in React
 - [ ] Extract true playable bound and align unit coordinates accurately
 - [ ] Adjust UI
 - [ ] Implement SQLite persistence + Parquet export

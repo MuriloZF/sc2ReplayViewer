@@ -60,7 +60,7 @@ npm run dev
 
 The development server is available at `http://localhost:5173` and proxies `/api` requests to the backend. Run `npm test`, `npm run lint`, and `npm run build` to verify frontend changes.
 
-The frontend supports replay upload, process-local replay history, animated timeline playback, reconstructed unit positions on a canvas minimap, player resource cards, army/worker charts, and replay-derived build-order columns. Build orders include game time, nearest known supply, workers, meaningful units and structures, and researched upgrades while filtering temporary or internal entities. Start the backend before Vite so `/api` requests can be proxied correctly.
+The frontend supports replay upload, process-local replay history, animated timeline playback, the exact replay map as a canvas minimap background, reconstructed unit positions, player resource cards, army/worker charts, and replay-derived build-order columns. Build orders include game time, nearest known supply, workers, meaningful units and structures, and researched upgrades while filtering temporary or internal entities. Start the backend before Vite so `/api` requests can be proxied correctly.
 
 ## Replay analysis
 

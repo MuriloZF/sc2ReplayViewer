@@ -1,10 +1,11 @@
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import type { FrameSnapshot } from "../types";
 
 interface MinimapProps {
   frame: FrameSnapshot;
   samples: FrameSnapshot[];
+  imageUrl: string;
 }
 
 interface Bounds {
@@ -16,9 +17,28 @@ interface Bounds {
 
 const PLAYER_COLORS = ["#22d3ee", "#fb4d4d", "#f5c451", "#a78bfa"];
 
-export function Minimap({ frame, samples }: MinimapProps) {
+export function Minimap({ frame, samples, imageUrl }: MinimapProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const [mapImage, setMapImage] = useState<HTMLImageElement | null>(null);
   const bounds = useMemo(() => calculateBounds(samples), [samples]);
+
+  useEffect(() => {
+    let active = true;
+    const image = new Image();
+    image.decoding = "async";
+    image.onload = () => {
+      if (active) setMapImage(image);
+    };
+    image.onerror = () => {
+      if (active) setMapImage(null);
+    };
+    image.src = imageUrl;
+    return () => {
+      active = false;
+      image.onload = null;
+      image.onerror = null;
+    };
+  }, [imageUrl]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -27,7 +47,11 @@ export function Minimap({ frame, samples }: MinimapProps) {
 
     const size = canvas.width;
     context.clearRect(0, 0, size, size);
-    drawMap(context, size);
+    if (mapImage) {
+      context.drawImage(mapImage, 0, 0, size, size);
+    } else {
+      drawFallbackMap(context, size);
+    }
     frame.players.forEach((player, playerIndex) => {
       context.fillStyle = PLAYER_COLORS[playerIndex % PLAYER_COLORS.length];
       player.units.forEach((unit) => {
@@ -40,7 +64,7 @@ export function Minimap({ frame, samples }: MinimapProps) {
       });
     });
     context.globalAlpha = 1;
-  }, [bounds, frame]);
+  }, [bounds, frame, mapImage]);
 
   return (
     <div className="minimap-wrap">
@@ -81,7 +105,7 @@ function project(x: number, y: number, bounds: Bounds, size: number) {
   };
 }
 
-function drawMap(context: CanvasRenderingContext2D, size: number) {
+function drawFallbackMap(context: CanvasRenderingContext2D, size: number) {
   const gradient = context.createLinearGradient(0, 0, size, size);
   gradient.addColorStop(0, "#111a28");
   gradient.addColorStop(1, "#070b12");

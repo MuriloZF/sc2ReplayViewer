@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 
-import { ApiError, listReplays } from "./api";
+import { ApiError, getMinimapUrl, listReplays } from "./api";
 
 describe("API client", () => {
   it("returns replay summaries", async () => {
@@ -23,5 +23,9 @@ describe("API client", () => {
     );
 
     await expect(listReplays()).rejects.toEqual(new ApiError("Invalid replay", 400));
+  });
+
+  it("builds the replay minimap URL", () => {
+    expect(getMinimapUrl("replay id")).toBe("/api/v1/replays/replay%20id/minimap");
   });
 });
