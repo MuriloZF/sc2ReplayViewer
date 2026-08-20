@@ -98,8 +98,8 @@ sc2-replay-export Replays/IEM9_Taipei Reports/ML/IEM9_Taipei
 
 The output directory contains:
 
-- `states.parquet` — Zstandard-compressed match states, sparse unit counts, upgrades, and the `p1_won` training target
-- `manifest.json` — schema version, row counts, replay hashes, and reasons for skipped replays
+- `states.parquet` — Zstandard-compressed match states, canonical sparse unit counts, unit modes, upgrades, and the `p1_won` training target
+- `manifest.json` — schema versions, raw-to-canonical unit mappings by game build, row counts, replay hashes, and reasons for skipped replays
 
 Existing output is protected by default. Pass `--overwrite` to regenerate a tournament. Replays that are corrupt, unsupported, incomplete, tied, or not 1v1 are recorded in the manifest and do not stop the rest of the batch. `replayScript.py` provides the same export flow with an interactive tournament-folder prompt.
 
@@ -117,6 +117,10 @@ weights = data.sample_weight.loc[list(split.train)]
 ```
 
 The loader expands sparse unit-count maps and upgrade lists, encodes map/race categories, and separates labels, weights, and match groups from model inputs. Always split by `match_id`; randomly splitting timestamp rows would leak states from the same replay across training and evaluation sets.
+
+`supply_cap` follows the in-game 200-supply ceiling. `supply_capacity` preserves the uncapped capacity contributed by all owned supply providers, which can exceed 200 when a player builds extra Depots, Pylons, or Overlords. `supply_used` remains authoritative tracker data and is not clamped because legitimate over-cap states can occur.
+
+Unit transformations are represented without double-counting identity. For example, a sieged tank contributes to `SiegeTank` in `unit_counts` and `SiegeTank:sieged` in `unit_modes`. Unknown names from future patches pass through unchanged and appear in the manifest, allowing new aliases to be reviewed rather than silently discarded or incorrectly merged.
 
 ## Layout
 
