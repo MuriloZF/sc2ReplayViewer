@@ -71,4 +71,5 @@ backend/
 - [X] Render the image in React
 - [X] Extract true playable bound and align unit coordinates accurately
 - [X] Adjust UI
-- [ ] Implement SQLite persistence + Parquet export
+- [X] Implement compact Parquet export for ML training
+- [ ] Decide whether SQLite persistence is necessary

@@ -32,6 +32,7 @@ dev = [
 
 [project.scripts]
 sc2-replay-inspect = "backend.app.cli:main"
+sc2-replay-export = "backend.app.dataset_cli:main"
 
 [tool.hatch.build.targets.wheel]
 packages = ["backend"]
