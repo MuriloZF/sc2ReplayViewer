@@ -162,11 +162,13 @@ The build-order columns only contain events at or before the selected replay tim
 
 ## 16. Keep ML handoff formats separate from application storage
 
-**Decision:** SQLite/SQLAlchemy is planned for application persistence, while Parquet and JSON are planned as export formats for ML datasets.
+**Decision:** The website keeps replay analyses only for the current process, while offline ML data is exported as Zstandard-compressed Parquet. Detailed JSON remains a single-replay debugging format and is not used as the training dataset.
 
-**Why:** A relational store is useful for API records, metadata, and retrieval, whereas Parquet is better suited to columnar model-training workloads. Treating one format as both the operational database and dataset interchange would compromise both uses.
+**Why:** Website snapshots contain repeated unit positions and nested display data that are useful for replay playback but highly redundant for model training. Parquet provides typed columns, sparse nested unit-count maps, dictionary encoding, and column compression without forcing website persistence.
 
-**Consequence:** The future persistence milestone should define stable record ownership and migrations, while the export layer should consume normalized analysis results rather than database-specific rows.
+Each ML row represents both players at one five-second timestamp and includes economy values, completed and in-progress unit counts, gameplay upgrades, the winner label, and an equal-per-match sample weight. Cosmetic unlocks are excluded, localized races are canonicalized, and opening frames are omitted until both players have authoritative economy data. Maps use their content hash as a stable identifier when available. Replay SHA-256 values provide stable match grouping so train and validation data can be split without placing states from the same match in both sets.
+
+**Consequence:** Model training can scale independently from the website representation. Only completed 1v1 matches with an unambiguous winner are exported; skipped files and reasons are recorded in a versioned manifest.
 
 ## Deferred decisions
 

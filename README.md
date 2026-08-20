@@ -85,6 +85,39 @@ sc2-replay-inspect path/to/game.SC2Replay
 
 Add `--include-data` to emit the full timeline, build order, and feature rows. Use `--output report.json` to write the result to a file instead of standard output. The command exits with a concise error for missing, corrupt, or unsupported replay files.
 
+## ML dataset export
+
+Training data is exported separately from the detailed JSON used to inspect individual replays. The exporter samples each completed 1v1 match every five seconds and writes both players into one compact, labeled row. It excludes raw game events, unit positions, minimap data, and build-order display data.
+
+Install the export dependencies and export a tournament directory:
+
+```bash
+pip install -e '.[export]'
+sc2-replay-export Replays/IEM9_Taipei Reports/ML/IEM9_Taipei
+```
+
+The output directory contains:
+
+- `states.parquet` — Zstandard-compressed match states, sparse unit counts, upgrades, and the `p1_won` training target
+- `manifest.json` — schema version, row counts, replay hashes, and reasons for skipped replays
+
+Existing output is protected by default. Pass `--overwrite` to regenerate a tournament. Replays that are corrupt, unsupported, incomplete, tied, or not 1v1 are recorded in the manifest and do not stop the rest of the batch. `replayScript.py` provides the same export flow with an interactive tournament-folder prompt.
+
+Load numeric model features and create leakage-safe splits with:
+
+```python
+from backend.app.analysis.ml_preprocessing import grouped_match_split, load_training_data
+
+data = load_training_data("Reports/ML/IEM9_Taipei/states.parquet")
+split = grouped_match_split(data.groups)
+
+X_train = data.features.loc[list(split.train)]
+y_train = data.target.loc[list(split.train)]
+weights = data.sample_weight.loc[list(split.train)]
+```
+
+The loader expands sparse unit-count maps and upgrade lists, encodes map/race categories, and separates labels, weights, and match groups from model inputs. Always split by `match_id`; randomly splitting timestamp rows would leak states from the same replay across training and evaluation sets.
+
 ## Layout
 
 - `backend/app/api/` — FastAPI routes
