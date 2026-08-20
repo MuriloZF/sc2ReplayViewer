@@ -42,9 +42,11 @@ def load_training_data(path: str | Path) -> PreparedTrainingData:
     nested_columns = [
         "p1_unit_counts",
         "p1_in_progress_counts",
+        "p1_unit_modes",
         "p1_upgrades",
         "p2_unit_counts",
         "p2_in_progress_counts",
+        "p2_unit_modes",
         "p2_upgrades",
     ]
     expanded = [_expand_nested_column(frame[column], column, pd) for column in nested_columns]
@@ -102,7 +104,11 @@ def _expand_nested_column(series: Any, column: str, pd: Any) -> Any:
         prefix = f"{column[:-1]}_"
     else:
         records = [dict(values) for values in series]
-        prefix = f"{column[:-1]}_"
+        prefix = (
+            f"{column.removesuffix('unit_modes')}mode_"
+            if column.endswith("unit_modes")
+            else f"{column[:-1]}_"
+        )
     return pd.DataFrame.from_records(records, index=series.index).fillna(0).add_prefix(prefix)
 
 

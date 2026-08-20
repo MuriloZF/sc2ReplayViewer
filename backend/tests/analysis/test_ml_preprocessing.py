@@ -22,6 +22,7 @@ def test_expands_nested_features_and_splits_by_match(tmp_path: Path) -> None:
     )
 
     assert "p1_unit_count_Marine" in prepared.features
+    assert "p1_mode_SiegeTank:sieged" in prepared.features
     assert "p1_upgrade_Stimpack" in prepared.features
     assert "map_id_map-hash" in prepared.features
     assert prepared.features.select_dtypes(exclude="number").empty
@@ -57,10 +58,12 @@ def _row(match_id: str, won: bool, game_time: float) -> dict[str, object]:
                 f"{prefix}_vespene": 0,
                 f"{prefix}_supply_used": 12.0,
                 f"{prefix}_supply_cap": 15.0,
+                f"{prefix}_supply_capacity": 15.0,
                 f"{prefix}_army_supply": 1.0,
                 f"{prefix}_workers": 11,
                 f"{prefix}_unit_counts": {unit: 1},
                 f"{prefix}_in_progress_counts": {f"{unit}InProgress": 1},
+                f"{prefix}_unit_modes": {"SiegeTank:sieged": 1},
                 f"{prefix}_upgrades": ["Stimpack"] if prefix == "p1" else [],
             }
         )

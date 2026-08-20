@@ -1,6 +1,7 @@
 from collections import Counter
 from typing import Any
 
+from backend.app.analysis.name_normalization import canonicalize_unit_name
 from backend.app.replay.decoder import DecodedReplay
 from backend.app.replay.events import PlayerInfo, PlayerResult
 from backend.app.replay.state import FrameSnapshot, PlayerSnapshot
@@ -63,12 +64,18 @@ def extract_ml_state_rows(
         }
         row.update(
             _player_features(
-                "p1", players[player_one.player_id], upgrades[player_one.player_id]
+                "p1",
+                players[player_one.player_id],
+                upgrades[player_one.player_id],
+                replay.metadata.base_build,
             )
         )
         row.update(
             _player_features(
-                "p2", players[player_two.player_id], upgrades[player_two.player_id]
+                "p2",
+                players[player_two.player_id],
+                upgrades[player_two.player_id],
+                replay.metadata.base_build,
             )
         )
         rows.append(row)
@@ -90,19 +97,28 @@ def _players_by_id(frame: FrameSnapshot) -> dict[int, PlayerSnapshot]:
 
 
 def _player_features(
-    prefix: str, player: PlayerSnapshot, upgrades: set[str]
+    prefix: str, player: PlayerSnapshot, upgrades: set[str], base_build: int
 ) -> dict[str, object]:
-    completed = Counter(unit.unit_type for unit in player.units if unit.completed)
-    in_progress = Counter(unit.unit_type for unit in player.units if not unit.completed)
+    completed: Counter[str] = Counter()
+    in_progress: Counter[str] = Counter()
+    modes: Counter[str] = Counter()
+    for unit in player.units:
+        canonical = canonicalize_unit_name(unit.unit_type, base_build=base_build)
+        destination = completed if unit.completed else in_progress
+        destination[canonical.name] += 1
+        if canonical.mode is not None:
+            modes[f"{canonical.name}:{canonical.mode}"] += 1
     return {
         f"{prefix}_minerals": player.minerals,
         f"{prefix}_vespene": player.vespene,
         f"{prefix}_supply_used": player.supply_used,
-        f"{prefix}_supply_cap": player.supply_cap,
+        f"{prefix}_supply_cap": min(player.supply_cap, 200.0),
+        f"{prefix}_supply_capacity": player.supply_cap,
         f"{prefix}_army_supply": player.army_supply,
         f"{prefix}_workers": player.workers,
         f"{prefix}_unit_counts": dict(sorted(completed.items())),
         f"{prefix}_in_progress_counts": dict(sorted(in_progress.items())),
+        f"{prefix}_unit_modes": dict(sorted(modes.items())),
         f"{prefix}_upgrades": sorted(upgrades),
     }
 

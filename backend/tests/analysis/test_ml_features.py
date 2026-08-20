@@ -11,7 +11,7 @@ from backend.app.replay.state import FrameSnapshot, PlayerSnapshot, UnitState
 
 def test_extracts_both_players_into_labeled_sparse_rows() -> None:
     replay = _replay()
-    marine = UnitState(1, "Marine", 1, None, True)
+    marine = UnitState(1, "SiegeTankSieged", 1, None, True)
     barracks = UnitState(2, "Barracks", 1, None, False)
     zergling = UnitState(3, "Zergling", 2, None, True)
     timeline = (
@@ -39,7 +39,8 @@ def test_extracts_both_players_into_labeled_sparse_rows() -> None:
 
     assert len(rows) == 2
     assert rows[1]["p1_won"] is True
-    assert rows[1]["p1_unit_counts"] == {"Marine": 1}
+    assert rows[1]["p1_unit_counts"] == {"SiegeTank": 1}
+    assert rows[1]["p1_unit_modes"] == {"SiegeTank:sieged": 1}
     assert rows[1]["p1_in_progress_counts"] == {"Barracks": 1}
     assert rows[1]["p2_unit_counts"] == {"Zergling": 1}
     assert rows[1]["p1_upgrades"] == ["Stimpack"]
@@ -81,6 +82,28 @@ def test_removes_uninitialized_opening_and_normalizes_races() -> None:
     assert rows[0]["game_time_seconds"] == 5
     assert rows[0]["p1_race"] == "Zerg"
     assert rows[0]["p2_race"] == "Protoss"
+
+
+def test_caps_display_supply_but_preserves_raw_capacity() -> None:
+    replay = _replay()
+    timeline = (
+        FrameSnapshot(
+            112,
+            5,
+            (
+                PlayerSnapshot(1, 50, 0, 205, 240, 150, 55, ()),
+                PlayerSnapshot(2, 50, 0, 190, 216, 130, 60, ()),
+            ),
+        ),
+    )
+
+    row = extract_ml_state_rows(replay, timeline, match_id="match", tournament="test")[0]
+
+    assert row["p1_supply_cap"] == 200
+    assert row["p1_supply_capacity"] == 240
+    assert row["p1_supply_used"] == 205
+    assert row["p2_supply_cap"] == 200
+    assert row["p2_supply_capacity"] == 216
 
 
 def test_rejects_replay_without_clear_1v1_result() -> None:

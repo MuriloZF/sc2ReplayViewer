@@ -49,8 +49,15 @@ def test_exports_compressed_parquet_and_skip_manifest(tmp_path: Path) -> None:
     assert table.column("match_id")[0].as_py() == hashlib.sha256(b"valid replay").hexdigest()
     assert table.column("p1_won")[0].as_py() is True
     assert table.column("p1_unit_counts")[1].as_py() == [("SCV", 1)]
-    assert table.schema.metadata == {b"schema_version": b"2"}
+    assert table.schema.metadata == {b"schema_version": b"3"}
     assert "p1_unit_count" not in table.column_names
+    assert "p1_supply_capacity" in table.column_names
+    assert "p1_unit_modes" in table.column_names
+    assert manifest["name_normalization_version"] == "1"
+    assert manifest["unit_name_mappings"]["97563"]["SCV"] == {
+        "name": "SCV",
+        "mode": None,
+    }
     assert manifest["tournament"] == "Test Cup"
     assert manifest["matches"] == 1
     assert manifest["skipped_replays"][0]["filename"] == "invalid.SC2Replay"
