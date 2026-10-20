@@ -18,7 +18,6 @@ def extract_ml_state_rows(
     timeline: tuple[FrameSnapshot, ...],
     *,
     match_id: str,
-    tournament: str,
 ) -> tuple[MlStateRow, ...]:
     """Build compact, labeled match-state rows for offline model training."""
 
@@ -51,7 +50,6 @@ def extract_ml_state_rows(
 
         row: MlStateRow = {
             "match_id": match_id,
-            "tournament": tournament,
             "map_name": replay.metadata.map_name,
             "map_id": _map_id(replay),
             "base_build": replay.metadata.base_build,
@@ -112,8 +110,7 @@ def _player_features(
         f"{prefix}_minerals": player.minerals,
         f"{prefix}_vespene": player.vespene,
         f"{prefix}_supply_used": player.supply_used,
-        f"{prefix}_supply_cap": min(player.supply_cap, 200.0),
-        f"{prefix}_supply_capacity": player.supply_cap,
+        f"{prefix}_supply_cap": min(player.supply_cap, 200),
         f"{prefix}_army_supply": player.army_supply,
         f"{prefix}_workers": player.workers,
         f"{prefix}_unit_counts": dict(sorted(completed.items())),

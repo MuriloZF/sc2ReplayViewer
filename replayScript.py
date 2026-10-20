@@ -7,12 +7,12 @@ REPORTS_ROOT = Path("Reports")
 
 
 def main() -> int:
-    tournament = input("Tournament folder: ").strip()
+    replay_folder = input("Replay folder: ").strip()
 
-    replay_dir = REPLAYS_ROOT / tournament
+    replay_dir = REPLAYS_ROOT / replay_folder
 
     if not replay_dir.is_dir():
-        print(f"ERROR: Tournament folder not found: {replay_dir}")
+        print(f"ERROR: Replay folder not found: {replay_dir}")
         return 1
 
     replays = sorted(replay_dir.glob("*.SC2Replay"))
@@ -21,14 +21,12 @@ def main() -> int:
         print(f"No .SC2Replay files found in {replay_dir}")
         return 1
 
-    output_dir = REPORTS_ROOT / "ML" / tournament
-    print(f"\nFound {len(replays)} replays in {tournament}.\n")
+    output_dir = REPORTS_ROOT / "ML" / replay_folder
+    print(f"\nFound {len(replays)} replays in {replay_folder}.\n")
     return export_dataset(
         [
             str(replay_dir),
             str(output_dir),
-            "--tournament",
-            tournament,
         ]
     )
 

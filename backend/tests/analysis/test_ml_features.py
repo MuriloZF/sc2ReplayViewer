@@ -33,9 +33,7 @@ def test_extracts_both_players_into_labeled_sparse_rows() -> None:
         ),
     )
 
-    rows = extract_ml_state_rows(
-        replay, timeline, match_id="match", tournament="IEM9 Taipei"
-    )
+    rows = extract_ml_state_rows(replay, timeline, match_id="match")
 
     assert len(rows) == 2
     assert rows[1]["p1_won"] is True
@@ -45,6 +43,9 @@ def test_extracts_both_players_into_labeled_sparse_rows() -> None:
     assert rows[1]["p2_unit_counts"] == {"Zergling": 1}
     assert rows[1]["p1_upgrades"] == ["Stimpack"]
     assert "p1_unit_count" not in rows[1]
+    assert "tournament" not in rows[1]
+    assert "p1_supply_capacity" not in rows[1]
+    assert "p2_supply_capacity" not in rows[1]
     assert sum(float(row["sample_weight"]) for row in rows) == pytest.approx(1)
 
 
@@ -76,7 +77,7 @@ def test_removes_uninitialized_opening_and_normalizes_races() -> None:
         ),
     )
 
-    rows = extract_ml_state_rows(replay, timeline, match_id="match", tournament="test")
+    rows = extract_ml_state_rows(replay, timeline, match_id="match")
 
     assert len(rows) == 1
     assert rows[0]["game_time_seconds"] == 5
@@ -84,7 +85,7 @@ def test_removes_uninitialized_opening_and_normalizes_races() -> None:
     assert rows[0]["p2_race"] == "Protoss"
 
 
-def test_caps_display_supply_but_preserves_raw_capacity() -> None:
+def test_caps_supply_limit_and_preserves_current_supply() -> None:
     replay = _replay()
     timeline = (
         FrameSnapshot(
@@ -97,13 +98,12 @@ def test_caps_display_supply_but_preserves_raw_capacity() -> None:
         ),
     )
 
-    row = extract_ml_state_rows(replay, timeline, match_id="match", tournament="test")[0]
+    row = extract_ml_state_rows(replay, timeline, match_id="match")[0]
 
     assert row["p1_supply_cap"] == 200
-    assert row["p1_supply_capacity"] == 240
     assert row["p1_supply_used"] == 205
     assert row["p2_supply_cap"] == 200
-    assert row["p2_supply_capacity"] == 216
+    assert row["p2_supply_used"] == 190
 
 
 def test_rejects_replay_without_clear_1v1_result() -> None:
@@ -115,7 +115,7 @@ def test_rejects_replay_without_clear_1v1_result() -> None:
     )
 
     with pytest.raises(UnsupportedTrainingReplay, match="one winner"):
-        extract_ml_state_rows(replay, (), match_id="match", tournament="test")
+        extract_ml_state_rows(replay, (), match_id="match")
 
 
 def _replay(*, players: tuple[PlayerInfo, ...] | None = None) -> DecodedReplay:

@@ -31,7 +31,6 @@ def load_training_data(path: str | Path) -> PreparedTrainingData:
     base = frame.drop(
         columns=[
             "match_id",
-            "tournament",
             "map_name",
             "p1_won",
             "sample_weight",

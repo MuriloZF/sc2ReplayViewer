@@ -19,7 +19,7 @@ from backend.app.analysis.name_normalization import (
 from backend.app.analysis.timeline import extract_timeline
 from backend.app.replay.decoder import DecodedReplay, ReplayDecodeError, S2ProtocolAdapter
 
-DATASET_SCHEMA_VERSION = "3"
+DATASET_SCHEMA_VERSION = "5"
 DEFAULT_SAMPLE_SECONDS = 5.0
 
 
@@ -36,11 +36,10 @@ class ReplayDecoder(Protocol):
     def decode(self, replay_path: str | Path) -> DecodedReplay: ...
 
 
-def export_tournament_dataset(
+def export_replay_dataset(
     replay_dir: Path,
     output_dir: Path,
     *,
-    tournament: str | None = None,
     sample_seconds: float = DEFAULT_SAMPLE_SECONDS,
     overwrite: bool = False,
     progress: Callable[[int, int, Path], None] | None = None,
@@ -82,7 +81,6 @@ def export_tournament_dataset(
     skipped: list[dict[str, str]] = []
     row_count = 0
     unit_names_by_build: dict[int, set[str]] = {}
-    tournament_name = tournament or replay_dir.name
 
     try:
         for index, replay_path in enumerate(replay_paths, start=1):
@@ -99,7 +97,6 @@ def export_tournament_dataset(
                     replay,
                     timeline,
                     match_id=match_id,
-                    tournament=tournament_name,
                 )
             except (OSError, ReplayDecodeError, UnsupportedTrainingReplay, ValueError) as exc:
                 skipped.append({"filename": replay_path.name, "reason": str(exc)})
@@ -125,7 +122,6 @@ def export_tournament_dataset(
     manifest = {
         "schema_version": DATASET_SCHEMA_VERSION,
         "generated_at": datetime.now(UTC).isoformat(),
-        "tournament": tournament_name,
         "sample_seconds": sample_seconds,
         "name_normalization_version": NAME_NORMALIZATION_VERSION,
         "dataset": dataset_path.name,
@@ -150,7 +146,6 @@ def _dataset_schema(pa: Any) -> Any:
     unit_counts = pa.map_(pa.string(), pa.int32())
     fields = [
         pa.field("match_id", pa.string(), nullable=False),
-        pa.field("tournament", pa.string(), nullable=False),
         pa.field("map_name", pa.string(), nullable=False),
         pa.field("map_id", pa.string(), nullable=False),
         pa.field("base_build", pa.int32(), nullable=False),
@@ -166,10 +161,9 @@ def _dataset_schema(pa: Any) -> Any:
             [
                 pa.field(f"{prefix}_minerals", pa.int32(), nullable=False),
                 pa.field(f"{prefix}_vespene", pa.int32(), nullable=False),
-                pa.field(f"{prefix}_supply_used", pa.float64(), nullable=False),
-                pa.field(f"{prefix}_supply_cap", pa.float64(), nullable=False),
-                pa.field(f"{prefix}_supply_capacity", pa.float64(), nullable=False),
-                pa.field(f"{prefix}_army_supply", pa.float64(), nullable=False),
+                pa.field(f"{prefix}_supply_used", pa.int32(), nullable=False),
+                pa.field(f"{prefix}_supply_cap", pa.int32(), nullable=False),
+                pa.field(f"{prefix}_army_supply", pa.int32(), nullable=False),
                 pa.field(f"{prefix}_workers", pa.int32(), nullable=False),
                 pa.field(f"{prefix}_unit_counts", unit_counts, nullable=False),
                 pa.field(f"{prefix}_in_progress_counts", unit_counts, nullable=False),

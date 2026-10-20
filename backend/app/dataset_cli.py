@@ -2,19 +2,18 @@ import argparse
 import sys
 from pathlib import Path
 
-from backend.app.storage.parquet_export import export_tournament_dataset
+from backend.app.storage.parquet_export import export_replay_dataset
 
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="sc2-replay-export",
-        description="Export a tournament directory as a compact Parquet training dataset.",
+        description="Export a replay directory as a compact Parquet training dataset.",
     )
     parser.add_argument("replay_dir", type=Path, help="Directory containing .SC2Replay files")
     parser.add_argument(
         "output_dir", type=Path, help="Directory for states.parquet and manifest.json"
     )
-    parser.add_argument("--tournament", help="Tournament label (defaults to replay directory name)")
     parser.add_argument(
         "--sample-seconds",
         type=_positive_float,
@@ -28,10 +27,9 @@ def build_parser() -> argparse.ArgumentParser:
 def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
     try:
-        result = export_tournament_dataset(
+        result = export_replay_dataset(
             args.replay_dir,
             args.output_dir,
-            tournament=args.tournament,
             sample_seconds=args.sample_seconds,
             overwrite=args.overwrite,
             progress=lambda index, total, path: print(f"[{index}/{total}] {path.name}"),

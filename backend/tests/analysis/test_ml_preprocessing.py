@@ -40,7 +40,6 @@ def test_expands_nested_features_and_splits_by_match(tmp_path: Path) -> None:
 def _row(match_id: str, won: bool, game_time: float) -> dict[str, object]:
     row: dict[str, object] = {
         "match_id": match_id,
-        "tournament": "Test Cup",
         "map_name": "Test Map",
         "map_id": "map-hash",
         "base_build": 97_563,
@@ -58,7 +57,6 @@ def _row(match_id: str, won: bool, game_time: float) -> dict[str, object]:
                 f"{prefix}_vespene": 0,
                 f"{prefix}_supply_used": 12.0,
                 f"{prefix}_supply_cap": 15.0,
-                f"{prefix}_supply_capacity": 15.0,
                 f"{prefix}_army_supply": 1.0,
                 f"{prefix}_workers": 11,
                 f"{prefix}_unit_counts": {unit: 1},
