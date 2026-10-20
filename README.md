@@ -89,11 +89,11 @@ Add `--include-data` to emit the full timeline, build order, and feature rows. U
 
 Training data is exported separately from the detailed JSON used to inspect individual replays. The exporter samples each completed 1v1 match every five seconds and writes both players into one compact, labeled row. It excludes raw game events, unit positions, minimap data, and build-order display data.
 
-Install the export dependencies and export a tournament directory:
+Install the export dependencies and export a replay directory:
 
 ```bash
 pip install -e '.[export]'
-sc2-replay-export Replays/IEM9_Taipei Reports/ML/IEM9_Taipei
+sc2-replay-export Replays/batch Reports/ML/batch
 ```
 
 The output directory contains:
@@ -101,14 +101,14 @@ The output directory contains:
 - `states.parquet` — Zstandard-compressed match states, canonical sparse unit counts, unit modes, upgrades, and the `p1_won` training target
 - `manifest.json` — schema versions, raw-to-canonical unit mappings by game build, row counts, replay hashes, and reasons for skipped replays
 
-Existing output is protected by default. Pass `--overwrite` to regenerate a tournament. Replays that are corrupt, unsupported, incomplete, tied, or not 1v1 are recorded in the manifest and do not stop the rest of the batch. `replayScript.py` provides the same export flow with an interactive tournament-folder prompt.
+Existing output is protected by default. Pass `--overwrite` to regenerate a dataset. Replays that are corrupt, unsupported, incomplete, tied, or not 1v1 are recorded in the manifest and do not stop the rest of the batch. `replayScript.py` provides the same export flow with an interactive replay-folder prompt.
 
 Load numeric model features and create leakage-safe splits with:
 
 ```python
 from backend.app.analysis.ml_preprocessing import grouped_match_split, load_training_data
 
-data = load_training_data("Reports/ML/IEM9_Taipei/states.parquet")
+data = load_training_data("Reports/ML/batch/states.parquet")
 split = grouped_match_split(data.groups)
 
 X_train = data.features.loc[list(split.train)]
@@ -118,9 +118,9 @@ weights = data.sample_weight.loc[list(split.train)]
 
 The loader expands sparse unit-count maps and upgrade lists, encodes map/race categories, and separates labels, weights, and match groups from model inputs. Always split by `match_id`; randomly splitting timestamp rows would leak states from the same replay across training and evaluation sets.
 
-`supply_cap` follows the in-game 200-supply ceiling. `supply_capacity` preserves the uncapped capacity contributed by all owned supply providers, which can exceed 200 when a player builds extra Depots, Pylons, or Overlords. `supply_used` remains authoritative tracker data and is not clamped because legitimate over-cap states can occur.
+Dataset schema version 5 stores `supply_used`, `supply_cap`, and `army_supply` as Int32. The parser discards fractional supply points using integer division of the raw tracker values by 4096 (for example, 61.5 becomes 61). No batch label is stored in the dataset or manifest. The `p1_supply_capacity` and `p2_supply_capacity` columns remain omitted. During dataset export, `supply_cap` is capped at 200, while `supply_used` is not clamped because legitimate over-cap states can occur. The parser and timeline API retain the tracker's supply capacity, which can exceed 200; this export limit does not apply there. Existing schema version 4 files retain Double supply fields; regenerate exports with `--overwrite` to use the new schema.
 
-Unit transformations are represented without double-counting identity. For example, a sieged tank contributes to `SiegeTank` in `unit_counts` and `SiegeTank:sieged` in `unit_modes`. Unknown names from future patches pass through unchanged and appear in the manifest, allowing new aliases to be reviewed rather than silently discarded or incorrectly merged.
+Unit transformations are represented without double-counting identity. For example, a sieged tank contributes to `SiegeTank` in `unit_counts` and `SiegeTank:sieged` in `unit_modes`. For successfully decoded replays, unit names without a known alias are kept exactly as written and recorded in `manifest.json` under `unit_name_mappings`, grouped by game build. The parser does not guess whether an unfamiliar name refers to an existing unit. A developer can inspect those mappings and explicitly add an alias when appropriate. This fallback does not make unsupported replay builds decodable.
 
 ## Layout
 
