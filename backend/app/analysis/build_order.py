@@ -20,7 +20,7 @@ class BuildOrderEntry:
     player_id: int
     game_loop: int
     game_time_seconds: float
-    supply: float | None
+    supply: int | None
     item_name: str
     category: BuildOrderCategory
     action: str
@@ -200,7 +200,7 @@ def _economy_by_player(
     }
 
 
-def _supply_at(events: tuple[PlayerEconomyEvent, ...], game_loop: int) -> float | None:
+def _supply_at(events: tuple[PlayerEconomyEvent, ...], game_loop: int) -> int | None:
     index = bisect_right([event.game_loop for event in events], game_loop) - 1
     return events[index].supply_used if index >= 0 else None
 

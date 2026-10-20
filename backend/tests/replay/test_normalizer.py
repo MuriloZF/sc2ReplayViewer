@@ -1,3 +1,5 @@
+import pytest
+
 from backend.app.replay.decoder.normalizer import normalize_tracker_events
 from backend.app.replay.events import UnitEventKind
 
@@ -49,9 +51,46 @@ def test_normalizes_unit_and_economy_events() -> None:
     assert units[0].position is not None
     assert units[0].position.x == 32
     assert economy[0].supply_used == 15
-    assert economy[0].supply_cap == 22.5
+    assert economy[0].supply_cap == 22
     assert economy[0].army_supply == 3
     assert economy[0].workers == 12
     assert len(units) == 1
     assert upgrades[0].upgrade_type == "TerranInfantryWeaponsLevel1"
     assert upgrades[0].player_id == 1
+
+
+@pytest.mark.parametrize(
+    ("raw_supply", "expected"),
+    [(0, 0), (61_440, 15), (63_488, 15), (187 * 4096 + 1397, 187), (205 * 4096 + 2048, 205)],
+)
+def test_truncates_supply_without_rounding_or_clamping(raw_supply: int, expected: int) -> None:
+    _, economy, _ = normalize_tracker_events(
+        [
+            {
+                "_event": "NNet.Replay.Tracker.SPlayerStatsEvent",
+                "m_stats": {"m_scoreValueFoodUsed": raw_supply},
+            }
+        ]
+    )
+
+    assert economy[0].supply_used == expected
+    assert type(economy[0].supply_used) is int
+
+
+@pytest.mark.parametrize(("raw_army", "expected"), [(None, 3), (0, 0), (14_336, 3)])
+def test_truncates_explicit_and_estimated_army_supply(raw_army: int | None, expected: int) -> None:
+    stats = {
+        "m_scoreValueFoodUsed": 63_488,
+        "m_scoreValueFoodMade": 92_160,
+        "m_scoreValueWorkersActiveCount": 12,
+    }
+    if raw_army is not None:
+        stats["m_scoreValueFoodUsedArmy"] = raw_army
+    _, economy, _ = normalize_tracker_events(
+        [{"_event": "NNet.Replay.Tracker.SPlayerStatsEvent", "m_stats": stats}]
+    )
+
+    assert economy[0].army_supply == expected
+    assert economy[0].supply_cap == 22
+    assert type(economy[0].army_supply) is int
+    assert type(economy[0].supply_cap) is int

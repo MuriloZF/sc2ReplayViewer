@@ -65,9 +65,9 @@ class PlayerSnapshotResponse(ApiModel):
     player_id: int
     minerals: int
     vespene: int
-    supply_used: float
-    supply_cap: float
-    army_supply: float
+    supply_used: int
+    supply_cap: int
+    army_supply: int
     workers: int
     units: list[UnitStateResponse]
 
@@ -87,7 +87,7 @@ class BuildOrderEntryResponse(ApiModel):
     player_id: int
     game_loop: int
     game_time_seconds: float
-    supply: float | None
+    supply: int | None
     item_name: str
     category: Literal["worker", "structure", "unit", "upgrade"]
     action: str

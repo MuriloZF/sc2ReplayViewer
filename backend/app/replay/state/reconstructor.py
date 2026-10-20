@@ -12,9 +12,9 @@ class PlayerSnapshot:
     player_id: int
     minerals: int
     vespene: int
-    supply_used: float
-    supply_cap: float
-    army_supply: float
+    supply_used: int
+    supply_cap: int
+    army_supply: int
     workers: int
     units: tuple[UnitState, ...]
 
