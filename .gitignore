@@ -22,3 +22,6 @@ frontend/vite.config.d.ts
 .idea/
 .vscode/
 .DS_Store
+
+dataset/
+models/
