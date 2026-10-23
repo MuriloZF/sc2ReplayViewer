@@ -4,11 +4,16 @@ This document records the major implementation decisions made while building SC2
 
 ## 1. Keep replay analysis independent from ML inference
 
-**Decision:** The application decodes and reconstructs replay data, but does not calculate win probability itself. The `backend/app/ml/` package remains an integration boundary for a future model.
+**Decision:** Replay decoding and reconstruction remain independent of model inference. The
+`backend/app/ml/` package loads a separately supplied XGBoost model and metadata, and a dedicated
+endpoint returns probabilities for the reconstructed timeline. Model training stays outside the viewer.
 
 **Why:** Replay parsing and model development have different lifecycles. Keeping them separate lets the replay pipeline produce stable training and inference inputs without coupling the website to a particular model framework or model version.
 
-**Consequence:** Win-probability values may be absent in the API and UI until an external model is integrated. Analysis output should remain useful without them.
+**Consequence:** Inference dependencies are optional and the model is loaded once, on demand.
+The UI fetches predictions separately, so model failures do not prevent replay playback. Inputs match
+the export's player ordering, opening initialization, and supply-cap normalization; outcomes are
+excluded. Feature recipes and order are validated against the saved model before inference.
 
 ## 2. Normalize `s2protocol` output behind an adapter
 
@@ -179,7 +184,7 @@ The following choices are intentionally not final:
 - the SQLAlchemy schema and migration strategy;
 - whether raw uploaded replay files should ever be retained;
 - retention and eviction policies for analyses and cached map assets;
-- the interface and serving strategy for an external win-probability model;
+- probability caching and model versioning beyond one local model bundle per process;
 - large-scale timeline transport and background processing;
 - dataset partitioning and Parquet schema evolution.
 

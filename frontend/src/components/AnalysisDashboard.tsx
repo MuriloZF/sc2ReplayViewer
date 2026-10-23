@@ -14,6 +14,7 @@ import { BuildOrders } from "./BuildOrders";
 import { Minimap } from "./Minimap";
 import { RaceIcon } from "./RaceIcon";
 import { ResourceChart } from "./ResourceChart";
+import { WinProbability } from "./WinProbability";
 
 interface AnalysisDashboardProps {
   replay: ReplaySummary;
@@ -109,7 +110,7 @@ export function AnalysisDashboard({ replay }: AnalysisDashboardProps) {
         <span className="mono muted">{formatDuration(replay.duration_seconds)}</span>
       </div>
       <div className="dashboard-grid">
-        <WinProbability players={replay.players} />
+        <WinProbability replayId={replay.replay_id} players={replay.players} gameLoop={frame.game_loop} />
         <section className="panel minimap-panel">
           <div className="panel-heading">
             <div>
@@ -169,39 +170,6 @@ function MatchPlayer({ player, index }: { player: Player; index: number }) {
         <small>{player.race}</small>
       </span>
     </div>
-  );
-}
-
-function WinProbability({ players }: { players: Player[] }) {
-  const probabilities = players.slice(0, 2).map((player) => player.win_probability);
-  const available = probabilities.every((value) => value !== null);
-  return (
-    <section className="panel probability-panel">
-      <div className="panel-heading">
-        <div>
-          <p className="eyebrow">Coming later</p>
-          <h3>Win probability</h3>
-        </div>
-      </div>
-      {available ? (
-        <div className="probability-stack">
-          {players.slice(0, 2).map((player, index) => (
-            <div
-              className={`probability-segment player-${index + 1}`}
-              style={{ flexBasis: `${(player.win_probability ?? 0) * 100}%` }}
-              key={player.player_id}
-            >
-              {Math.round((player.win_probability ?? 0) * 100)}%
-            </div>
-          ))}
-        </div>
-      ) : (
-        <div className="probability-pending">
-          <strong>Not available yet</strong>
-          <span>Win prediction will be added later.</span>
-        </div>
-      )}
-    </section>
   );
 }
 

@@ -18,6 +18,10 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+inference = [
+  "numpy>=1.26,<3.0",
+  "xgboost>=3.4.1,<4.0",
+]
 export = [
   "pandas>=2.2,<3.0",
   "pyarrow>=18,<20",

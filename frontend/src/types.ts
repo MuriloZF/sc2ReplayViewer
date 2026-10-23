@@ -67,6 +67,18 @@ export interface TimelineResponse {
   samples: FrameSnapshot[];
 }
 
+export interface ProbabilitySample {
+  game_loop: number;
+  game_time_seconds: number;
+  players: { player_id: number; win_probability: number }[];
+}
+
+export interface WinProbabilityResponse {
+  replay_id: string;
+  model_name: string;
+  samples: ProbabilitySample[];
+}
+
 export interface BuildOrderEntry {
   player_id: number;
   game_loop: number;

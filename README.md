@@ -1,6 +1,6 @@
 # SC2 Replay Viewer
 
-SC2 Replay Viewer is a web application for extracting and exploring data from StarCraft II replay files. The project focuses on replay analysis; win-probability inference remains an external ML concern.
+SC2 Replay Viewer is a web application for extracting and exploring data from StarCraft II replay files, including win-probability estimates from a supplied model. Model training remains separate from the replay viewer.
 
 ## Requirements
 
@@ -14,7 +14,7 @@ Create a virtual environment and install the API with its development tools:
 ```bash
 python -m venv .venv
 source .venv/bin/activate
-pip install -e '.[dev,export]'
+pip install -e '.[dev,export,inference]'
 uvicorn backend.app.main:app --reload
 ```
 
@@ -35,6 +35,7 @@ The replay API exposes:
 - `GET /api/v1/replays` — list analyses in the current process
 - `GET /api/v1/replays/{replay_id}/summary` — metadata, players, and event counts
 - `GET /api/v1/replays/{replay_id}/timeline` — sampled economy and unit state
+- `GET /api/v1/replays/{replay_id}/win-probability` — model estimates for initialized 1v1 timeline samples
 - `GET /api/v1/replays/{replay_id}/build-order` — chronological production events
 - `GET /api/v1/replays/{replay_id}/minimap` — exact replay map minimap as a cached PNG
 - `GET /api/v1/replays/{replay_id}/map-metadata` — map dimensions and playable bounds
@@ -61,7 +62,33 @@ npm run dev
 
 The development server is available at `http://localhost:5173` and proxies `/api` requests to the backend. Run `npm test`, `npm run lint`, and `npm run build` to verify frontend changes.
 
-The frontend supports replay upload, process-local replay history, animated timeline playback, the exact replay map as a canvas minimap background, reconstructed unit positions, player resource cards, army/worker charts, and replay-derived build-order columns. Build orders include game time, nearest known supply, workers, meaningful units and structures, and researched upgrades while filtering temporary or internal entities. Start the backend before Vite so `/api` requests can be proxied correctly.
+The frontend supports replay upload, process-local replay history, animated timeline playback, win probabilities synchronized with the selected frame, the exact replay map as a canvas minimap background, reconstructed unit positions, player resource cards, army/worker charts, and replay-derived build-order columns. Build orders include game time, nearest known supply, workers, meaningful units and structures, and researched upgrades while filtering temporary or internal entities. Start the backend before Vite so `/api` requests can be proxied correctly.
+
+## Win probability
+
+Install the inference dependencies with `pip install -e '.[inference]'`. The backend defaults to
+`models/XGBClassifier/`, containing `sc2_win_probability_model.json` and `model_metadata.json`.
+Set `SC2_WIN_PROBABILITY_MODEL_DIR` to another directory to use a different model bundle.
+Model files are ignored by Git and must be supplied separately when deploying. Restart the backend
+after replacing a loaded model or its metadata.
+
+The model loads on the first probability request and stays in memory. The endpoint returns
+`replay_id`, `model_name`, and `samples`; each sample contains `game_loop`, `game_time_seconds`,
+and `players` with `player_id` and `win_probability` values between 0 and 1. The frontend fetches
+these samples once when opening a replay and follows the current playback frame.
+
+Inference follows the feature recipe and order in the metadata, which are checked against the
+saved model. Player 1 is the lower player ID, matching the training exporter, and player 2's
+probability is `1 - p1`. The supplied model uses game time, both players' minerals, gas, supply,
+army supply, and workers, plus player-1-minus-player-2 differences. Supply capacity is capped at
+200 as in the export. Match outcomes are never used as model inputs. Predictions cover all
+initialized samples, including the final frame; they remain estimates rather than being replaced
+with the recorded result.
+
+Opening frames without initialized economy data show a waiting state. Unsupported replays
+(including games other than 1v1) return 422; missing or invalid model files or inference
+dependencies return 503. These errors appear in the probability panel while the rest of the
+replay analysis remains available.
 
 ## Replay analysis
 
@@ -128,5 +155,5 @@ Unit transformations are represented without double-counting identity. For examp
 - `backend/app/replay/` — protocol decoding, normalized events, and state reconstruction
 - `backend/app/analysis/` — timeline, build-order, and feature extraction
 - `backend/app/storage/` — database and dataset export
-- `backend/app/ml/` — integration boundary for future inference
+- `backend/app/ml/` — model loading, feature preparation, and win-probability inference
 - `frontend/src/` — React application
