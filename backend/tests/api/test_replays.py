@@ -1,5 +1,6 @@
 import asyncio
 from collections.abc import Callable
+from dataclasses import replace
 from pathlib import Path
 from typing import Any
 
@@ -11,12 +12,82 @@ from backend.app.analysis.build_order import BuildOrderCategory, BuildOrderEntry
 from backend.app.api.dependencies import get_map_asset_resolver, get_replay_analyzer
 from backend.app.api.routes import replays as replay_routes
 from backend.app.main import create_app
+from backend.app.ml.inference import WinProbabilityPredictor
 from backend.app.replay.decoder.models import DecodedReplay, MapReference, ReplayMetadata
 from backend.app.replay.events import PlayerInfo, PlayerResult
 from backend.app.replay.map_assets import MapAssetError, MapBounds
 from backend.app.replay.state import FrameSnapshot, PlayerSnapshot
 
 DEFAULT_MAP_REFERENCE = MapReference("us", "s2ma", "ab" * 32)
+
+
+def _prediction_analysis() -> ReplayAnalysis:
+    base = _analysis()
+    metadata = base.replay.metadata
+    return replace(
+        base,
+        replay=replace(
+            base.replay,
+            metadata=replace(
+                metadata,
+                players=(*metadata.players, PlayerInfo(2, "Beta", "Zerg", PlayerResult.LOSS)),
+            ),
+        ),
+        timeline=(
+            FrameSnapshot(
+                224,
+                10.0,
+                (*base.timeline[0].players, PlayerSnapshot(2, 50, 0, 15, 23, 2, 13, ())),
+            ),
+        ),
+    )
+
+
+def test_win_probability_endpoint(win_model_dir: Path) -> None:
+    async def scenario() -> None:
+        application = create_app()
+        application.state.win_probability_predictor = WinProbabilityPredictor(win_model_dir)
+        record = application.state.replay_store.add("match.SC2Replay", _prediction_analysis())
+        async with AsyncClient(
+            transport=ASGITransport(app=application), base_url="http://test"
+        ) as client:
+            response = await client.get(f"/api/v1/replays/{record.replay_id}/win-probability")
+        assert response.status_code == 200
+        payload = response.json()
+        assert payload["replay_id"] == record.replay_id
+        assert payload["model_name"] == win_model_dir.name
+        sample = payload["samples"][0]
+        assert sample["game_loop"] == 224
+        assert sample["game_time_seconds"] == 10.0
+        assert [player["player_id"] for player in sample["players"]] == [1, 2]
+        assert sum(player["win_probability"] for player in sample["players"]) == 1.0
+        assert all(0 <= player["win_probability"] <= 1 for player in sample["players"])
+
+    asyncio.run(scenario())
+
+
+def test_prediction_failures_do_not_break_replay_analysis(tmp_path: Path) -> None:
+    async def scenario() -> None:
+        application = create_app()
+        application.state.win_probability_predictor = WinProbabilityPredictor(tmp_path)
+        unsupported = application.state.replay_store.add("solo.SC2Replay", _analysis())
+        missing_model = application.state.replay_store.add("1v1.SC2Replay", _prediction_analysis())
+        async with AsyncClient(
+            transport=ASGITransport(app=application), base_url="http://test"
+        ) as client:
+            for replay_id, expected_status in (
+                ("missing", 404),
+                (unsupported.replay_id, 422),
+                (missing_model.replay_id, 503),
+            ):
+                response = await client.get(f"/api/v1/replays/{replay_id}/win-probability")
+                assert response.status_code == expected_status
+                assert isinstance(response.json()["detail"], str)
+            timeline = await client.get(f"/api/v1/replays/{missing_model.replay_id}/timeline")
+            assert timeline.status_code == 200
+            assert len(timeline.json()["samples"]) == 1
+
+    asyncio.run(scenario())
 
 
 class StubAnalyzer:

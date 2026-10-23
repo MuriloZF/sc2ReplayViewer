@@ -6,6 +6,7 @@ from fastapi import Request
 
 from backend.app.analysis import ReplayAnalysis, analyze_replay
 from backend.app.api.store import InMemoryReplayStore
+from backend.app.ml.inference import WinProbabilityPredictor
 from backend.app.replay.map_assets import MapAssetResolver
 
 type ReplayAnalyzer = Callable[..., ReplayAnalysis]
@@ -21,6 +22,10 @@ async def get_replay_analyzer() -> ReplayAnalyzer:
 
 async def get_map_asset_resolver(request: Request) -> MapAssetResolver:
     return cast(MapAssetResolver, request.app.state.map_asset_resolver)
+
+
+async def get_win_probability_predictor(request: Request) -> WinProbabilityPredictor:
+    return cast(WinProbabilityPredictor, request.app.state.win_probability_predictor)
 
 
 def run_analysis(analyzer: ReplayAnalyzer, path: Path, sample_seconds: float) -> ReplayAnalysis:

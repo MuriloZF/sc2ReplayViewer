@@ -1,3 +1,4 @@
+import logging
 import os
 import tempfile
 from pathlib import Path
@@ -12,6 +13,7 @@ from backend.app.api.dependencies import (
     get_map_asset_resolver,
     get_replay_analyzer,
     get_replay_store,
+    get_win_probability_predictor,
     run_analysis,
 )
 from backend.app.api.schemas import (
@@ -22,13 +24,20 @@ from backend.app.api.schemas import (
     MapBoundsResponse,
     MapReferenceResponse,
     PlayerResponse,
+    ProbabilitySampleResponse,
     ReplayCountsResponse,
     ReplayListResponse,
     ReplayMapMetadataResponse,
     ReplaySummaryResponse,
     TimelineResponse,
+    WinProbabilityResponse,
 )
 from backend.app.api.store import InMemoryReplayStore, ReplayRecord
+from backend.app.ml.inference import (
+    ModelUnavailable,
+    UnsupportedPrediction,
+    WinProbabilityPredictor,
+)
 from backend.app.replay.decoder import MapReference, ReplayDecodeError
 from backend.app.replay.map_assets import MapAssetError, MapAssetResolver
 from backend.app.replay.state.reconstructor import LOOPS_PER_SECOND
@@ -40,6 +49,8 @@ UPLOAD_CHUNK_BYTES = 1024 * 1024
 StoreDependency = Annotated[InMemoryReplayStore, Depends(get_replay_store)]
 AnalyzerDependency = Annotated[ReplayAnalyzer, Depends(get_replay_analyzer)]
 MapResolverDependency = Annotated[MapAssetResolver, Depends(get_map_asset_resolver)]
+PredictorDependency = Annotated[WinProbabilityPredictor, Depends(get_win_probability_predictor)]
+logger = logging.getLogger(__name__)
 
 
 @router.post(
@@ -108,6 +119,44 @@ async def replay_timeline(replay_id: str, store: StoreDependency) -> TimelineRes
     return TimelineResponse(
         replay_id=replay_id,
         samples=[FrameSnapshotResponse.model_validate(frame) for frame in record.analysis.timeline],
+    )
+
+
+@router.get(
+    "/{replay_id}/win-probability",
+    response_model=WinProbabilityResponse,
+    summary="Get model win probabilities over the replay timeline",
+    description=(
+        "Runs the configured XGBoost model on initialized 1v1 economy samples. "
+        "Player 1 is the player with the lower player ID; player 2 receives the complementary "
+        "probability. Match results are never used as inputs. Opening samples without economy "
+        "data are omitted. Values are estimates, including at the final replay sample."
+    ),
+    responses={
+        404: {"model": ApiErrorResponse},
+        422: {"model": ApiErrorResponse},
+        503: {"model": ApiErrorResponse},
+    },
+)
+async def replay_win_probability(
+    replay_id: str, store: StoreDependency, predictor: PredictorDependency
+) -> WinProbabilityResponse:
+    record = _record_or_404(store, replay_id)
+    try:
+        samples = await run_in_threadpool(predictor.predict, record.analysis)
+    except UnsupportedPrediction as exc:
+        raise HTTPException(422, str(exc)) from exc
+    except ModelUnavailable as exc:
+        logger.warning("Win probability unavailable: %s", exc, exc_info=True)
+        raise HTTPException(
+            status.HTTP_503_SERVICE_UNAVAILABLE,
+            "Win probability model is unavailable. "
+            "Check the model files and inference dependencies.",
+        ) from exc
+    return WinProbabilityResponse(
+        replay_id=replay_id,
+        model_name=predictor.model_dir.name,
+        samples=[ProbabilitySampleResponse.model_validate(sample) for sample in samples],
     )
 
 

@@ -348,13 +348,21 @@ h3 { margin-bottom: 0; font-size: 1.25rem; letter-spacing: 0.02em; text-transfor
 .panel-heading .eyebrow { margin-bottom: 4px; }
 
 .probability-panel { display: flex; min-height: 260px; flex-direction: column; }
-.probability-stack { display: flex; min-height: 74px; margin-top: auto; overflow: hidden; border: 1px solid var(--line); font-family: var(--display); font-size: 1.35rem; font-weight: 700; }
-.probability-segment { display: grid; min-width: 48px; place-items: center; }
+.probability-display { display: flex; gap: 16px; margin-top: 16px; }
+.probability-stack { display: flex; flex-direction: column; flex: 0 0 64px; height: 260px; overflow: hidden; border: 1px solid var(--line); }
+.probability-segment { flex-shrink: 0; transition: height 150ms ease; }
 .probability-segment.player-1 { color: #162124; background: var(--player-one); }
 .probability-segment.player-2 { color: #281b1a; background: var(--player-two); }
 .probability-pending { display: grid; flex: 1; place-content: center start; gap: 8px; border-bottom: 1px solid var(--line); }
 .probability-pending strong { font-family: var(--display); font-size: 2rem; font-weight: 600; text-transform: uppercase; }
 .probability-pending span { max-width: 170px; color: var(--muted); font-size: 0.78rem; line-height: 1.5; }
+.probability-values { display: flex; flex: 1; min-width: 0; flex-direction: column; justify-content: space-between; gap: 12px; }
+.probability-values > div { display: grid; gap: 8px; min-width: 0; }
+.probability-values span { overflow-wrap: anywhere; color: var(--muted); font-size: 0.8rem; }
+.probability-values strong { font-family: var(--display); font-size: 2rem; }
+.probability-values .player-1 strong { color: var(--player-one); }
+.probability-values .player-2 strong { color: var(--player-two); }
+.probability-caption { margin-bottom: 0; color: var(--muted); font-size: 0.75rem; }
 
 .minimap-wrap { position: relative; overflow: hidden; margin-top: 16px; border: 1px solid #3a4653; background: #05070a; }
 .minimap { display: block; width: 100%; aspect-ratio: 1; image-rendering: auto; }

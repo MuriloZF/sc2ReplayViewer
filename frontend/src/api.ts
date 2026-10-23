@@ -3,6 +3,7 @@ import type {
   ReplayMapMetadata,
   ReplaySummary,
   TimelineResponse,
+  WinProbabilityResponse,
 } from "./types";
 
 const API_ROOT = "/api/v1";
@@ -47,6 +48,10 @@ export function uploadReplay(file: File, sampleSeconds = 5): Promise<ReplaySumma
 
 export function getTimeline(replayId: string): Promise<TimelineResponse> {
   return request<TimelineResponse>(`/replays/${replayId}/timeline`);
+}
+
+export function getWinProbability(replayId: string): Promise<WinProbabilityResponse> {
+  return request<WinProbabilityResponse>(`/replays/${encodeURIComponent(replayId)}/win-probability`);
 }
 
 export function getBuildOrder(replayId: string): Promise<BuildOrderResponse> {

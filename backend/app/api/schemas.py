@@ -83,6 +83,23 @@ class TimelineResponse(ApiModel):
     samples: list[FrameSnapshotResponse]
 
 
+class PlayerProbabilityResponse(ApiModel):
+    player_id: int
+    win_probability: float = Field(ge=0, le=1)
+
+
+class ProbabilitySampleResponse(ApiModel):
+    game_loop: int
+    game_time_seconds: float
+    players: list[PlayerProbabilityResponse]
+
+
+class WinProbabilityResponse(ApiModel):
+    replay_id: str
+    model_name: str
+    samples: list[ProbabilitySampleResponse]
+
+
 class BuildOrderEntryResponse(ApiModel):
     player_id: int
     game_loop: int

@@ -3,6 +3,7 @@ from fastapi import FastAPI
 from backend.app.api.router import api_router
 from backend.app.api.store import InMemoryReplayStore
 from backend.app.config import get_settings
+from backend.app.ml.inference import WinProbabilityPredictor
 from backend.app.replay.map_assets import MapAssetResolver
 
 
@@ -17,6 +18,9 @@ def create_app() -> FastAPI:
     )
     application.state.replay_store = InMemoryReplayStore()
     application.state.map_asset_resolver = MapAssetResolver(settings.map_cache_dir)
+    application.state.win_probability_predictor = WinProbabilityPredictor(
+        settings.win_probability_model_dir
+    )
     application.include_router(api_router, prefix=settings.api_prefix)
     return application
 
