@@ -117,9 +117,6 @@ export function AnalysisDashboard({ replay }: AnalysisDashboardProps) {
               <p className="eyebrow">{replay.map_name}</p>
               <h3>Minimap</h3>
             </div>
-            <span className="count-badge">
-              {playerSnapshots.reduce((total, player) => total + player.units.length, 0)} units
-            </span>
           </div>
           <Minimap
             frame={frame}
